@@ -3,9 +3,11 @@ cmake_minimum_required(VERSION 3.22)
 project(nosqlite)
 
 add_executable(${PROJECT_NAME}
-            src/main.cpp
+            main.cpp
             src/json_parsing.hpp
-            src/json_parsing.cpp)
+            src/json_parsing.cpp
+            src/database.hpp
+            src/database.cpp)
 
 
 add_subdirectory(lib)

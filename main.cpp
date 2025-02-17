@@ -2,7 +2,7 @@
 #include <chrono>
 #include "json.hpp"
 #include "simdjson.h"
-#include "json_parsing.hpp"
+#include "src/json_parsing.hpp"
 
 using namespace std;
 using namespace std::chrono;
