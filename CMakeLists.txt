@@ -4,10 +4,12 @@ project(nosqlite)
 
 add_executable(${PROJECT_NAME}
             main.cpp
-            src/json_parsing.hpp
-            src/json_parsing.cpp
+            src/auxiliary.hpp
+            src/auxiliary.cpp
             src/database.hpp
-            src/database.cpp)
+            src/database.cpp
+            src/collection.hpp
+            src/collection.cpp)
 
 
 add_subdirectory(lib)
