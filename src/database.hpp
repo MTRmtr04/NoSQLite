@@ -46,7 +46,7 @@ namespace nosqlite {
         /**
          * @param path_to_database Path to the json file database to be created. Must be an empty directory.
          * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
-         * @brief Constructor for the database class. Build a database from scratch using the json files in path_to_json. 
+         * @brief Constructor for the database class. Builds a database from scratch using the json files in path_to_json. 
          */
         database(const std::string &path_to_database, const std::string &path_to_json);
 

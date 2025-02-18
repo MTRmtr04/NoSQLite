@@ -7,7 +7,7 @@
 
 using json = nlohmann::json;
 using namespace nosqlite;
-namespace fs = std::filesystem;;
+namespace fs = std::filesystem;
 
     
 database::database(const std::string &path) : path(path) {
@@ -26,15 +26,14 @@ database::~database() {
 
 void database::build_from_scratch(const std::string &path_to_json) {
 
-    // Checks if the json files to create the database with exist.
-    fs::path path_to_json_content = path_to_json;
-    if (!fs::exists(path_to_json_content)) {
-        std::cerr << "Can't find files. No such directory: \"" << path_to_json << "\"" << std::endl;
+    // Checks if the directory with the json files to create the database with exists.
+    if (int ret = check_path_existence(path_to_json) != 0) {
+        std::cerr << "    The directory with the files to create the database doesn't exist." << std::endl;
         return;
     }
 
     // Delete everything from the directory where the database will be stored if it exists, else create it.
-    fs::path path_to_database = path;
+    fs::path path_to_database = this->path;
     if (fs::exists(path_to_database))
         for (const fs::path &entry : fs::directory_iterator(path_to_database))
             fs::remove_all(entry);
@@ -48,9 +47,11 @@ void database::build_from_scratch(const std::string &path_to_json) {
         std::string collection_name = get_last_dir(entry.string());
         collection_names.push_back(collection_name);
 
-        collection col = collection(collection_name, entry.parent_path().string());
+        fs::path collection_path = fs::path(this->path) / collection_name;
 
-        collections[collection_name] = &col;
+        collection col(collection_path.string(), entry.parent_path().string());
+
+        this->collections[collection_name] = &col;
     }
     std::sort(collection_names.begin(), collection_names.end());
 
@@ -62,6 +63,7 @@ void database::build_from_scratch(const std::string &path_to_json) {
         json json_header;
         json_header["collections"] = collection_names;
         header << json_header << std::endl;
+        header.close();
     }
     else {
         std::cerr << "Failed to create database header file." << std::endl;
@@ -74,10 +76,10 @@ std::string database::get_path() const {
 }
 
 collection* database::get_collection(const std::string &col) {
-    auto itr = collections.find(col);
-    if (itr == collections.end()) {
+    auto itr = this->collections.find(col);
+    if (itr == this->collections.end()) {
         std::cerr << "Collection: \"" << col << "\" does not exist in this database." << std::endl;
         return nullptr;
     }
-    return collections.at(col);
+    return this->collections.at(col);
 }

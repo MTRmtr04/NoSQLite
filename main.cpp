@@ -2,34 +2,46 @@
 #include <chrono>
 #include <iostream>
 #include "json.hpp"
-#include "simdjson.h"
 #include "src/auxiliary.hpp"
 #include "src/database.hpp"
 
 using namespace std;
 using namespace std::chrono;
-using namespace simdjson;
 using namespace nosqlite;
 using json = nlohmann::json;
 
 
 int main() {
-    // ondemand::parser parser;
-    // padded_string doc = padded_string::load("../lib/twitter.json");
-    // ondemand::document tweets = parser.iterate(doc);
-    // std::cout << uint64_t(tweets["search_metadata"]["count"]) << " results." << std::endl;
-    // auto start = high_resolution_clock::now();
-    // json object = simdjson_to_nlohmann(tweets);
-    // auto stop = high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
+
+    auto stop = high_resolution_clock::now();
+    auto duration1 = duration_cast<microseconds>(stop - start);
+
+
+    auto duration2 = duration_cast<microseconds>(stop - start);
+
     // object["search_metadata"]["count"] = 1000;
 
+    std::fstream file("../lib/twitter.json");
+    json o;
+    file >> o;
+    start = high_resolution_clock::now();
+
+    ofstream g("test2.json");
+    o["statusus"] = {"x",{"help"}};
+    g << o;
+
+    stop = high_resolution_clock::now();
+    file.close();
+    auto duration3 = duration_cast<microseconds>(stop - start);
+
     // std::cout << uint64_t(object["search_metadata"]["count"]) << " results." << std::endl;
-    // auto duration = duration_cast<microseconds>(stop - start);
 
-    // cout << "Time taken by function: "
-    //      << duration.count() << " microseconds" << endl;
+    cout << "Time taken by function nlohmann: "
+            << duration3.count() << " microseconds" << endl;
 
-    database db = database("db", "../src/test");
+
+    // database db = database("db", "../src/test");
 
   return 0;
 }
