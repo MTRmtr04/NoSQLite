@@ -5,6 +5,9 @@
 #define COLLECTION_CLASS_H
 
 #include <string>
+#include <json.hpp>
+using json = nlohmann::json;
+
 
 
 /**
@@ -35,11 +38,23 @@ namespace nosqlite {
         void build_from_scratch(const std::string &path_to_json);
 
         /**
+         * @brief Builds a collection instance from an existing collection in memory.
+         */
+        void build_from_existing();
+
+        /**
          * @param json_content JSON document to add to the collection.
          * @param update_header Indicates whether the header file should be updated or not.
          * @brief Adds a new document to the collection, updates the indices and the header file (or not).
          */
         int add_document(const std::string &json_content, bool update_header);
+        
+        /**
+         * @param json_object JSON object to add to the collection.
+         * @param update_header Indicates whether the header file should be updated or not.
+         * @brief Adds a new document to the collection, updates the indices and the header file (or not).
+         */
+        int add_document(json &json_object, bool update_header);
 
     public:
 

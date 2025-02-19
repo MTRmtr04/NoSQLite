@@ -11,9 +11,7 @@ namespace fs = std::filesystem;
 
     
 database::database(const std::string &path) : path(path) {
-    // TODO: Build collection instances.
-    // TODO: Build index instances.
-    // TODO: Set any other attributes with info on the database.
+    this->build_from_existing();
 }
 
 database::database(const std::string &path_to_database, const std::string &path_to_json) : path(path_to_database) {
@@ -21,23 +19,22 @@ database::database(const std::string &path_to_database, const std::string &path_
 }
 
 database::~database() {
-    // TODO: Everything necessary.
+    for (auto p : this->collections) {
+        delete p.second;
+    }
 }
 
 void database::build_from_scratch(const std::string &path_to_json) {
 
     // Checks if the directory with the json files to create the database with exists.
-    if (int ret = check_path_existence(path_to_json) != 0) {
-        std::cerr << "    The directory with the files to create the database doesn't exist." << std::endl;
-        return;
-    }
+    if (int ret = check_path_existence(path_to_json) != 0) return;
 
     // Delete everything from the directory where the database will be stored if it exists, else create it.
     fs::path path_to_database = this->path;
     if (fs::exists(path_to_database))
         for (const fs::path &entry : fs::directory_iterator(path_to_database))
             fs::remove_all(entry);
-    else fs::create_directory(path_to_database);
+    else fs::create_directories(path_to_database);
 
     
     std::vector<std::string> collection_names;
@@ -49,9 +46,9 @@ void database::build_from_scratch(const std::string &path_to_json) {
 
         fs::path collection_path = fs::path(this->path) / collection_name;
 
-        collection col(collection_path.string(), entry.parent_path().string());
+        collection* col = new collection(collection_path.string(), (entry.parent_path() / collection_name).string());
 
-        this->collections[collection_name] = &col;
+        this->collections[collection_name] = col;
     }
     std::sort(collection_names.begin(), collection_names.end());
 
@@ -66,8 +63,24 @@ void database::build_from_scratch(const std::string &path_to_json) {
         header.close();
     }
     else {
-        std::cerr << "Failed to create database header file." << std::endl;
+        throw_failed_to_create_header("");
         return;
+    }
+}
+
+void database::build_from_existing() {
+    // Checks if the database exists.
+    if (int ret = check_path_existence(this->path) != 0) return;
+
+    // Read the header file.
+    fs::path header = fs::path(this->path) / "header.json";
+    json header_json = read_and_parse_json(header);
+    std::vector<std::string> collection_names = header_json["collections"];
+
+    for (const std::string &collection_name : collection_names) {
+        fs::path collection_path = fs::path(this->path) / collection_name;
+        collection* col = new collection(collection_path.string());
+        this->set_collection(collection_name, col);
     }
 }
 
@@ -75,11 +88,15 @@ std::string database::get_path() const {
     return this->path;
 }
 
-collection* database::get_collection(const std::string &col) {
+collection* database::get_collection(const std::string &col) const {
     auto itr = this->collections.find(col);
     if (itr == this->collections.end()) {
-        std::cerr << "Collection: \"" << col << "\" does not exist in this database." << std::endl;
+        throw_no_such_collection(col);
         return nullptr;
     }
     return this->collections.at(col);
+}
+
+void database::set_collection(const std::string &colletion_name, collection* col) {
+    this->collections[colletion_name] = col;
 }

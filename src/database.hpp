@@ -35,6 +35,18 @@ namespace nosqlite {
         * @brief Build a database from scratch using the json files in path_to_json. Will delete everyting in the path directory.
         */
         void build_from_scratch(const std::string &path_to_json);
+
+        /**
+         * @brief Builds the database instance from a database already in memory (must follow the NoSQLite specifications)
+         */
+        void build_from_existing();
+
+        /**
+         * @param collection_name Name of the collection.
+         * @param col Pointer to the collection.
+         * @brief Sets the collection instance with the correct name.
+         */
+        void set_collection(const std::string &collection_name, collection* col);
     public:
 
         /**
@@ -65,8 +77,7 @@ namespace nosqlite {
          * @brief Get a collection instance by name.
          * @return Pointer to the collection or nullptr if it doesn't exist.
          */
-        collection* get_collection(const std::string &col);
-
+        collection* get_collection(const std::string &col) const;
        
     };
 } // namespace nosqlite

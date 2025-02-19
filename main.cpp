@@ -12,36 +12,27 @@ using json = nlohmann::json;
 
 
 int main() {
-    auto start = high_resolution_clock::now();
-
-    auto stop = high_resolution_clock::now();
-    auto duration1 = duration_cast<microseconds>(stop - start);
 
 
-    auto duration2 = duration_cast<microseconds>(stop - start);
+    // std::ifstream file("../twitter.json");
+    // auto start = high_resolution_clock::now();
+    // json o;
+    // file >> o;
+    // auto stop = high_resolution_clock::now();
+    // auto duration = duration_cast<microseconds>(stop - start);
+    // file.close();
 
-    // object["search_metadata"]["count"] = 1000;
+    // cout << "first " << duration.count() << endl;
 
-    std::fstream file("../lib/twitter.json");
-    json o;
-    file >> o;
-    start = high_resolution_clock::now();
-
-    ofstream g("test2.json");
-    o["statusus"] = {"x",{"help"}};
-    g << o;
-
-    stop = high_resolution_clock::now();
-    file.close();
-    auto duration3 = duration_cast<microseconds>(stop - start);
-
-    // std::cout << uint64_t(object["search_metadata"]["count"]) << " results." << std::endl;
-
-    cout << "Time taken by function nlohmann: "
-            << duration3.count() << " microseconds" << endl;
-
-
-    // database db = database("db", "../src/test");
+    // start = high_resolution_clock::now();
+    // ifstream file2("../twitter.json");
+    // json j = json::parse(file2);
+    // stop = high_resolution_clock::now();
+    // file.close();
+    // duration = duration_cast<microseconds>(stop - start);
+    // cout << "second " << duration.count() << endl;
+    database db("db");
+    cout << db.get_collection("col1")->get_number_of_documents() << endl;
 
   return 0;
 }
