@@ -97,6 +97,8 @@ namespace nosqlite {
          * @brief Adds a new document to the collection and updates the indices.
          */
         int add_document(const std::string &json_content);
+
+        int create_document(const nlohmann::json &new_document);
     };
     
 } // namespace nosqlite

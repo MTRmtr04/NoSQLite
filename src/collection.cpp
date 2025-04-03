@@ -195,3 +195,15 @@ int collection::add_document(const std::string &json_content, bool update_header
 int collection::add_document(const std::string &json_content) {
     return this->add_document(json_content, true);
 }
+
+int nosqlite::collection::create_document(const json &new_document) {
+    json doc_copy = new_document;
+
+    // Valida se é realmente um objeto JSON
+    if (!doc_copy.is_object()) {
+        std::cerr << "Error: create_document received invalid JSON object." << std::endl;
+        return 1;
+    }
+
+    return this->add_document(doc_copy, true);
+}
