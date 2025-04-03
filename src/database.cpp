@@ -3,7 +3,7 @@
 #include <fstream>
 #include "database.hpp"
 #include "auxiliary.hpp"
-#include "json.hpp"
+#include <json.hpp>
 
 using json = nlohmann::json;
 using namespace nosqlite;

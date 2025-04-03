@@ -1,9 +1,9 @@
 import json
 
 # Caminho para o ficheiro original exportado
-input_file = "movies.json"
+input_file = str(input("Name of the file you want to convert: "))
 # Caminho para o novo ficheiro com array
-output_file = "movies_array.json"
+output_file = str(input("Name of the file where you want to write the output: "))
 
 with open(input_file, 'r', encoding='utf-8') as f_in:
     lines = f_in.readlines()

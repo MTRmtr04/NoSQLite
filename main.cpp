@@ -31,8 +31,8 @@ int main() {
     // file.close();
     // duration = duration_cast<microseconds>(stop - start);
     // cout << "second " << duration.count() << endl;
-    database db("db");
-    cout << db.get_collection("col1")->get_number_of_documents() << endl;
+    database db("db", "../dataset");
+    cout << db.get_collection("data")->get_number_of_documents() << endl;
 
   return 0;
 }
