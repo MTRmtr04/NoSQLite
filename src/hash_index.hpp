@@ -23,16 +23,19 @@ namespace nosqlite {
         std::string path;
 
         /**
+         * @param fields List of nested fields. Only the last one will be indexed.
          * @brief Builds the hash index.
          */
-        void build_index();
+        void build_index(const std::vector<std::string> &fields);
 
     public:
 
         /**
+         * @param path Path to the collection to be indexed.
+         * @param fields List of nested fields. Only the last one will be indexed.
          * @brief Constructor for the hash_index class.
          */
-        hash_index(const std::string &path);
+        hash_index(const std::string &path, const std::vector<std::string> &fields);
 
         /**
          * @brief Getter for the path attribute.

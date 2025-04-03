@@ -27,10 +27,22 @@ namespace nosqlite {
     int check_path_existence(const std::string &path);
 
     /**
+     * @param str String to be hashed.
+     * @brief Hashes a string and returns a hexadecimal string.
+     */
+    std::string hash_string(const std::string &str);
+
+    /**
      * @param num Integer to be hashed.
-     * @brief Hashes an Integer and return a hexadecimal string,
+     * @brief Hashes an Integer and returns a hexadecimal string.
      */
     std::string hash_integer(unsigned long long num);
+
+    /**
+     * @param object JSON object to be hashed.
+     * @brief Hashes a JSON object and returns a hexadecimal string.
+     */
+    std::string hash_json(const json &object);
 
     /**
      * @param path Path to file.
@@ -89,6 +101,12 @@ namespace nosqlite {
      * @return A JSON object with the content of the field should it exist and null otherwise. Should no fields be provided the original JSON is returned.
      */
     json access_nested_fields(json content, std::vector<std::string> fields);
+
+    /**
+     * @param fields List of fields
+     * @brief Builds the name of the hash index
+     */
+    std::string build_index_name(const std::vector<std::string> &fields);
 }
 
 #endif

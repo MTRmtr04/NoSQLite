@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 #include "auxiliary.hpp"
 
 namespace nosqlite {
@@ -21,13 +22,21 @@ namespace nosqlite {
         return 0;
     }
 
-    std::string hash_integer(unsigned long long num) {
+    std::string hash_string(const std::string &str) {
         std::hash<std::string> hash_func;
-        size_t hash = hash_func(std::to_string(num));
+        size_t hash = hash_func(str);
 
         std::stringstream stream;
         stream << std::hex << hash;
         return stream.str();
+    }
+
+    std::string hash_integer(unsigned long long num) {
+        return hash_string(std::to_string(num));
+    }
+
+    std::string hash_json(const json &object) {
+        return hash_string(object.dump());
     }
 
     void throw_failed_to_open_file(fs::path path) {
@@ -64,6 +73,7 @@ namespace nosqlite {
     json read_and_parse_json(fs::path path) {
         std::ifstream file(path);
         json object;
+       
         if (file.is_open()) {
             try {
                 object = json::parse(file);
@@ -75,6 +85,8 @@ namespace nosqlite {
         else {
             throw_failed_to_open_file(path);
         }
+
+        file.close();
         return object;   
     }
 
@@ -98,5 +110,16 @@ namespace nosqlite {
 
         return obj;
     }
+
+    std::string build_index_name(const std::vector<std::string> &fields) {
+        std::string name = "hash";
+
+        for (const std::string &field : fields) {
+            name +=  "_" + field;
+        }
+        
+        return name;
+    }
+
 
 }

@@ -4,6 +4,7 @@
 #include <json.hpp>
 #include "src/auxiliary.hpp"
 #include "src/database.hpp"
+#include "src/collection.hpp"
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -32,16 +33,18 @@ int main() {
     // file.close();
     // duration = duration_cast<microseconds>(stop - start);
     // cout << "second " << duration.count() << endl;
-    // database db("db");
-    // cout << db.get_collection("col1")->get_number_of_documents() << endl;
+    database db("movies", "../dataset");
+    db.get_collection("movies")->create_hash_index("title");
+    // cout << db.get_collection("col1")->create_hash_index("a", "b", "c") << endl;
 
   
-    fs::path p = fs::path("test/col2/t2.json");
-    json obj = read_and_parse_json(p)[0];
-    obj = access_nested_fields(obj, {});
-    cout << obj;
+    // fs::path p = fs::path("test/col2/t2.json");
+    // json obj = read_and_parse_json(p)[0];
+    // obj["test"].push_back("help");
+    // obj["test"].push_back("help");
+    // cout << obj;
 
-
+/*
     //For testing Read!
     database db("db", "../dataset");
     collection* col = db.get_collection("data_movies");
@@ -57,7 +60,7 @@ int main() {
     } else {
       cout << "Document not found!" << endl;
     }
-
+*/
 /*
     //For testing Create
     json new_film = {

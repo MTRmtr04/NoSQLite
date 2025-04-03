@@ -18,6 +18,9 @@ collection::collection(const std::string &path, const std::string &path_to_json)
 
 collection::~collection() {
     // TODO: Everything necessary.
+    for (auto p : this->indexes) {
+        delete p.second;
+    }
 }
 
 void collection::build_from_scratch(const std::string &path_to_json) {
@@ -32,17 +35,16 @@ void collection::build_from_scratch(const std::string &path_to_json) {
             fs::remove_all(entry);
     else fs::create_directory(path_to_collection);
 
-    // Get all the file paths in the path_to_json directory
+    // Get all the file JSON paths in the path_to_json directory
     std::vector<fs::path> paths;
-    for (fs::path p : fs::recursive_directory_iterator(path_to_json)) {
-        if (fs::is_directory(p)) continue;
-        if (p.extension() != ".json") continue; // If the file is not json it gets ignored
+    for (const fs::path &p : fs::recursive_directory_iterator(path_to_json)) {
+        if (fs::is_directory(p) || p.extension() != ".json") continue;
         paths.push_back(p);
     }
 
     std::vector<fs::path> failed_paths;
     // Read all the json objects in the files and create a document for them in the database.
-    for (fs::path p : paths) {
+    for (const fs::path &p : paths) {
         json objects = read_and_parse_json(p);
         if (objects.empty()) {
             failed_paths.push_back(p);
@@ -134,9 +136,9 @@ int collection::add_document(json &json_object, bool update_header) {
     
         // Create a new one or edit the file if it already exists (in case of a hash collision).
     if (fs::exists(path_to_document)) {
+        json json_file = read_and_parse_json(path_to_document);
         std::ofstream file(path_to_document);
         if (file.is_open()) {
-            json json_file = read_and_parse_json(path_to_document);
             if (json_file.empty()) {
                 ret = 1;
                 update_header = false;
@@ -145,25 +147,25 @@ int collection::add_document(json &json_object, bool update_header) {
                 json_file.push_back(json_object);
                 file << json_file << std::endl;
             }
-            file.close();
         }
         else {
             throw_failed_to_open_file(path_to_document);
             ret = 1;
             update_header = false;
         }
+        file.close();
     }
     else {
         std::ofstream file(path_to_document);
         if (file.is_open()) {
             file << '[' << json_object << ']' << std::endl;
-            file.close();
         }
         else {
             throw_failed_to_create_file(path_to_document);
             ret = 1;
             update_header = false;
         }
+        file.close();
     }
 
 
@@ -199,8 +201,6 @@ int collection::add_document(const std::string &json_content, bool update_header
 int collection::add_document(const std::string &json_content) {
     return this->add_document(json_content, true);
 }
-
-void collection::create_hash_index(const std::string &field, ...) {}
     
 int nosqlite::collection::create_document(const json &new_document) {
     json doc_copy = new_document;
@@ -213,7 +213,6 @@ int nosqlite::collection::create_document(const json &new_document) {
 
     return this->add_document(doc_copy, true);
 }
-
 
 json collection::get_document(unsigned long long id) const {
     // Hash the id to find the file path
