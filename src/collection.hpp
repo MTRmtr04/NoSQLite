@@ -98,7 +98,7 @@ namespace nosqlite {
          */
         int add_document(const std::string &json_content);
 
-        int create_document(const nlohmann::json &new_document);
+        int create_document(const json &new_document);
     };
     
 } // namespace nosqlite
