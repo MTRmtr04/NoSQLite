@@ -36,6 +36,7 @@ void collection::build_from_scratch(const std::string &path_to_json) {
     std::vector<fs::path> paths;
     for (fs::path p : fs::recursive_directory_iterator(path_to_json)) {
         if (fs::is_directory(p)) continue;
+        if (p.extension() != ".json") continue; // If the file is not json it gets ignored
         paths.push_back(p);
     }
 
@@ -127,8 +128,11 @@ int collection::add_document(json &json_object, bool update_header) {
 
     // Build the path for the file according to the id hash.
     fs::path path_to_document = directory / id_hash.substr(4).append(".json");
-
-    // Create a new one or edit the file if it already exists (in case of a hash collision).
+    
+    // Prints the path for the created files
+    //std::cout << "New document created here: " << path_to_document << std::endl;
+    
+        // Create a new one or edit the file if it already exists (in case of a hash collision).
     if (fs::exists(path_to_document)) {
         std::ofstream file(path_to_document);
         if (file.is_open()) {
@@ -194,4 +198,16 @@ int collection::add_document(const std::string &json_content, bool update_header
 
 int collection::add_document(const std::string &json_content) {
     return this->add_document(json_content, true);
+}
+
+int nosqlite::collection::create_document(const json &new_document) {
+    json doc_copy = new_document;
+
+    // Valida se é realmente um objeto JSON
+    if (!doc_copy.is_object()) {
+        std::cerr << "Error: create_document received invalid JSON object." << std::endl;
+        return 1;
+    }
+
+    return this->add_document(doc_copy, true);
 }
