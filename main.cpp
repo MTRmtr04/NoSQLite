@@ -31,8 +31,21 @@ int main() {
     // file.close();
     // duration = duration_cast<microseconds>(stop - start);
     // cout << "second " << duration.count() << endl;
+
     database db("db", "../dataset");
-    cout << db.get_collection("data")->get_number_of_documents() << endl;
+    collection* col = db.get_collection("data_movies");
+
+    unsigned long long id = 0;
+
+    std::string hash = hash_integer(id);
+    std::cout << "Hash do ID " << id << ": " << hash << std::endl;
+
+    json doc = col->get_document(0);
+    if(!doc.empty()){
+      cout << doc.dump(4) << endl;
+    } else {
+      cout << "Document not found!" << endl;
+    }
 
   return 0;
 }

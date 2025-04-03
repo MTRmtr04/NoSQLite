@@ -261,10 +261,12 @@ std::vector<json> collection::find_by_genre(const std::string &genre) const {
     std::vector<json> all_docs = get_all_documents();
 
     for (const auto& doc : all_docs) {
-        if (doc.contains("genre")) {
-            std::string movie_genre = doc["genre"];
-            if (movie_genre == genre) {
-                results.push_back(doc);
+        if (doc.contains("genres") && doc["genres"].is_array()) {
+            for (const auto& movie_genres : doc["genres"]) {
+                if (movie_genres == genre) {
+                    results.push_back(doc);
+                    break;
+                }
             }
         }
     }
@@ -299,4 +301,8 @@ std::vector<json> collection::find_by_year(int year) const {
     }
 
     return results;
+}
+
+json collection::read_document_by_id(unsigned long long id) {
+    return get_document(id);
 }

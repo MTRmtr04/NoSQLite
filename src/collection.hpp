@@ -10,7 +10,6 @@
 using json = nlohmann::json;
 
 
-
 /**
  * @namespace Namespace for NoSQLite
  */
@@ -145,6 +144,8 @@ namespace nosqlite {
          * @return Vector of movies released in the specified year.
          */
         std::vector<json> find_by_year(int year) const;
+
+        json read_document_by_id(unsigned long long id);
     };
 } // namespace nosqlite
 
