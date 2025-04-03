@@ -36,6 +36,7 @@ void collection::build_from_scratch(const std::string &path_to_json) {
     std::vector<fs::path> paths;
     for (fs::path p : fs::recursive_directory_iterator(path_to_json)) {
         if (fs::is_directory(p)) continue;
+        if (p.extension() != ".json") continue; // If the file is not json it gets ignored
         paths.push_back(p);
     }
 
