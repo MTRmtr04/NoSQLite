@@ -211,3 +211,116 @@ int nosqlite::collection::create_document(const json &new_document) {
 
     return this->add_document(doc_copy, true);
 }
+
+
+json collection::get_document(unsigned long long id) const {
+    // Hash the id to find the file path
+    std::string id_hash = hash_integer(id);
+
+    // Create the directory
+    fs::path directory = fs::path(this->path) / id_hash.substr(0, 2) / id_hash.substr(2, 2);
+    fs::path path_to_document = directory / id_hash.substr(4).append(".json");
+
+    if (!fs::exists(path_to_document)) {
+        std::cerr << "Error: Document with id " << id << " does not exist." << std::endl;
+        return json();
+    }
+
+    // Read the JSON file
+    json document = read_and_parse_json(path_to_document);
+    if (document.empty()) {
+        std::cerr << "Error: Document with id " << id << " is empty." << std::endl;
+        return json();
+    }
+
+    // Find the document with the given id
+    for (const auto& doc : document) {
+        if (doc.contains("id") && doc["id"] == id) {
+            return doc;
+        }
+    }
+    return json();
+}
+
+std::vector<json> collection::get_all_documents() const {
+    std::vector<json> documents;
+    for (unsigned long long i=0; i < this->number_of_documents; i++) {
+        json document = this->get_document(i);
+        if (!document.empty()) {
+            documents.push_back(document);
+        }
+    }
+    return documents;
+}
+
+std::vector<json> collection::find_all() const {
+    return get_all_documents();
+}
+
+std::vector<json> collection::find_by_title(const std::string &title) const {
+    std::vector<json> results;
+    std::vector<json> all_docs = get_all_documents();
+
+    for (const auto& doc : all_docs) {
+        if (doc.contains("title")) {
+            std::string movie_title = doc["title"];
+            if (movie_title == title) {
+                results.push_back(doc);
+            }
+        }
+    }
+
+    return results;
+}
+
+std::vector<json> collection::find_by_genre(const std::string &genre) const {
+    std::vector<json> results;
+    std::vector<json> all_docs = get_all_documents();
+
+    for (const auto& doc : all_docs) {
+        if (doc.contains("genres") && doc["genres"].is_array()) {
+            for (const auto& movie_genres : doc["genres"]) {
+                if (movie_genres == genre) {
+                    results.push_back(doc);
+                    break;
+                }
+            }
+        }
+    }
+
+    return results;
+}
+
+std::vector<json> collection::find_by_director(const std::string &director) const {
+    std::vector<json> results;
+    std::vector<json> all_docs = get_all_documents();
+
+    for (const auto& doc : all_docs) {
+        if (doc.contains("director")) {
+            std::string movie_director = doc["director"];
+            if (movie_director == director) {
+                results.push_back(doc);
+            }
+        }
+    }
+
+    return results;
+}
+
+std::vector<json> collection::find_by_year(int year) const {
+    std::vector<json> results;
+    std::vector<json> all_docs = get_all_documents();
+
+    for (const auto& doc : all_docs) {
+        if (doc.contains("year") && doc["year"] == year) {
+            results.push_back(doc);
+        }
+    }
+
+    return results;
+}
+
+json collection::read_document_by_id(unsigned long long id) {
+    return get_document(id);
+}
+
