@@ -96,7 +96,9 @@ namespace nosqlite {
          * @brief Adds a new document to the collection and updates the indices.
          */
         int add_document(const std::string &json_content);
-
+      
+        int create_document(const nlohmann::json &new_document);
+      
         /**
          * @param id ID of the document to be retrieved.
          * @brief Recovers a document from the collection using its ID.
@@ -146,6 +148,7 @@ namespace nosqlite {
         std::vector<json> find_by_year(int year) const;
 
         json read_document_by_id(unsigned long long id);
+
     };
 } // namespace nosqlite
 

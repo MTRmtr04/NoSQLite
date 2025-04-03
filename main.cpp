@@ -32,6 +32,8 @@ int main() {
     // duration = duration_cast<microseconds>(stop - start);
     // cout << "second " << duration.count() << endl;
 
+/*
+For testing Read!
     database db("db", "../dataset");
     collection* col = db.get_collection("data_movies");
 
@@ -46,6 +48,23 @@ int main() {
     } else {
       cout << "Document not found!" << endl;
     }
+*/
+/*
+For testing Create
+    json new_film = {
+      {"title", "Tenet"},
+      {"director", "Christopher Nolan"},
+      {"year", 2020},
+      {"genres", {"Action", "Sci-Fi"}}
+    };
+
+    database db("db", "../dataset");
+    collection* col = db.get_collection("data_movies");
+
+    cout << "Before: " << col->get_number_of_documents() << endl;
+    col->create_document(new_film);
+    cout << "After: " << col->get_number_of_documents() << endl;
+*/
 
   return 0;
 }
