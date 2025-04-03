@@ -33,8 +33,8 @@ int main() {
     // file.close();
     // duration = duration_cast<microseconds>(stop - start);
     // cout << "second " << duration.count() << endl;
-    database db("movies", "../dataset");
-    db.get_collection("movies")->create_hash_index("title");
+    //database db("movies", "../dataset");
+    //db.get_collection("movies")->create_hash_index("title");
     // cout << db.get_collection("col1")->create_hash_index("a", "b", "c") << endl;
 
   
@@ -45,22 +45,30 @@ int main() {
     // cout << obj;
 
 /*
-    //For testing Read!
+    //For testing Read 
     database db("db", "../dataset");
     collection* col = db.get_collection("data_movies");
 
-    unsigned long long id = 0;
+    //std::string field = "genres";
+    //std::string value = "Comedy";
+    
+    std::string field = "released";
+    std::string value = "2012-09-21T00:00:00Z";
+ 
+    //std::string field = "rating";
+    //double value = 5.8; 
 
-    std::string hash = hash_integer(id);
-    std::cout << "Hash do ID " << id << ": " << hash << std::endl;
-
-    json doc = col->get_document(0);
-    if(!doc.empty()){
-      cout << doc.dump(4) << endl;
+    std::vector<json> results = col->read(field, value);
+    
+    if (!results.empty()) {
+        for (const auto &doc : results) {
+            std::cout << doc.dump(4) << std::endl;
+        }
     } else {
-      cout << "Document not found!" << endl;
+        std::cout << "No documents found with " << field << " = " << value << std::endl;
     }
 */
+
 /*
     //For testing Create
     json new_film = {
