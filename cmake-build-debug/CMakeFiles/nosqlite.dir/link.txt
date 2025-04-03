@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/nosqlite.dir/main.cpp.o CMakeFiles/nosqlite.dir/src/auxiliary.cpp.o CMakeFiles/nosqlite.dir/src/database.cpp.o CMakeFiles/nosqlite.dir/src/collection.cpp.o -o "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/bin/nosqlite" 

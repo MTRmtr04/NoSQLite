@@ -49,7 +49,7 @@ namespace nosqlite {
          * @brief Adds a new document to the collection, updates the indices and the header file (or not).
          */
         int add_document(const std::string &json_content, bool update_header);
-        
+
         /**
          * @param json_object JSON object to add to the collection.
          * @param update_header Indicates whether the header file should be updated or not.
@@ -97,8 +97,55 @@ namespace nosqlite {
          * @brief Adds a new document to the collection and updates the indices.
          */
         int add_document(const std::string &json_content);
+
+        /**
+         * @param id ID of the document to be retrieved.
+         * @brief Recovers a document from the collection using its ID.
+         * @return The document JSON founded or an empty JSON object if it doesn't exist.
+         */
+        json get_document(unsigned long long id) const;
+
+        /**
+         * brief Finds all documents in the collection.
+         * @return A vector of JSON objects.
+         */
+        std::vector<json> get_all_documents() const;
+
+        /**
+         * @brief Finds all documents in the collection.
+         * @return A vector of JSON objects.
+         */
+        std::vector<json> find_all() const;
+
+        /**
+         *
+         * @param title Movie title to search for.
+        * @brief Finds all documents in the collection with the given title.
+         * @return A vector of movies matching the title.
+         */
+        std::vector<json> find_by_title(const std::string &title) const;
+
+        /**
+         * @param genre Movie genre to search for.
+         * @brief Finds all documents in the collection with the given genre.
+         * @return A vector of movies matching the genre.
+         */
+        std::vector<json> find_by_genre(const std::string &genre) const;
+
+        /**
+         * @param director Movie director to search for.
+         * @brief Finds all documents in the collection with the given director.
+         * @return Vector of movies by the specified director.
+         */
+        std::vector<json> find_by_director(const std::string &director) const;
+
+        /**
+         * @param year Year to search for.
+         * @brief Finds mpvies released in the specified year.
+         * @return Vector of movies released in the specified year.
+         */
+        std::vector<json> find_by_year(int year) const;
     };
-    
 } // namespace nosqlite
 
 #endif

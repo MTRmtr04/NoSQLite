@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/cmake-build-debug",
+  "command": "/usr/bin/c++  -I\"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/include\" -g -std=gnu++17 -fdiagnostics-color=always -o CMakeFiles/nosqlite.dir/main.cpp.o -c \"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/main.cpp\"",
+  "file": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/main.cpp",
+  "output": "CMakeFiles/nosqlite.dir/main.cpp.o"
+},
+{
+  "directory": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/cmake-build-debug",
+  "command": "/usr/bin/c++  -I\"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/include\" -g -std=gnu++17 -fdiagnostics-color=always -o CMakeFiles/nosqlite.dir/src/auxiliary.cpp.o -c \"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/src/auxiliary.cpp\"",
+  "file": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/src/auxiliary.cpp",
+  "output": "CMakeFiles/nosqlite.dir/src/auxiliary.cpp.o"
+},
+{
+  "directory": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/cmake-build-debug",
+  "command": "/usr/bin/c++  -I\"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/include\" -g -std=gnu++17 -fdiagnostics-color=always -o CMakeFiles/nosqlite.dir/src/database.cpp.o -c \"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/src/database.cpp\"",
+  "file": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/src/database.cpp",
+  "output": "CMakeFiles/nosqlite.dir/src/database.cpp.o"
+},
+{
+  "directory": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/cmake-build-debug",
+  "command": "/usr/bin/c++  -I\"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/include\" -g -std=gnu++17 -fdiagnostics-color=always -o CMakeFiles/nosqlite.dir/src/collection.cpp.o -c \"/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/src/collection.cpp\"",
+  "file": "/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/src/collection.cpp",
+  "output": "CMakeFiles/nosqlite.dir/src/collection.cpp.o"
+}
+]
