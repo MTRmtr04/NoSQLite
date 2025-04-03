@@ -42,9 +42,9 @@ int main() {
     database db("db", "../dataset");
     collection* col = db.get_collection("data_movies");
 
-    cout << "Antes: " << col->get_number_of_documents() << endl;
+    cout << "Before: " << col->get_number_of_documents() << endl;
     col->create_document(new_film);
-    cout << "Depois: " << col->get_number_of_documents() << endl;
+    cout << "After: " << col->get_number_of_documents() << endl;
 
   return 0;
 }

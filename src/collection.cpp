@@ -128,8 +128,11 @@ int collection::add_document(json &json_object, bool update_header) {
 
     // Build the path for the file according to the id hash.
     fs::path path_to_document = directory / id_hash.substr(4).append(".json");
-
-    // Create a new one or edit the file if it already exists (in case of a hash collision).
+    
+    // Prints the path for the created files
+    //std::cout << "New document created here: " << path_to_document << std::endl;
+    
+        // Create a new one or edit the file if it already exists (in case of a hash collision).
     if (fs::exists(path_to_document)) {
         std::ofstream file(path_to_document);
         if (file.is_open()) {
