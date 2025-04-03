@@ -1,0 +1,3 @@
+/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/cmake-build-debug/CMakeFiles/nosqlite.dir
+/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/cmake-build-debug/CMakeFiles/edit_cache.dir
+/mnt/c/Users/Sara/Desktop/Projeto Integrador/NoSQLite/cmake-build-debug/CMakeFiles/rebuild_cache.dir
