@@ -5,7 +5,7 @@
 #define AUXILIARY_H
 
 #include <filesystem>
-#include "json.hpp"
+#include <json.hpp>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -17,7 +17,7 @@ namespace nosqlite {
      * @brief Extracts the last directory in a file path.
      * @return Name of the last directory in path.
      */
-    std::string get_last_dir(std::string path);
+    std::string get_last_dir(const std::string &path);
 
     /**
      * @param path File path to verify.
@@ -48,19 +48,19 @@ namespace nosqlite {
      * @param collection_name Name of the collection whose header couldn't be created. Default value is empty string for the database header.
      * @brief Prints out an error message saying the header file couldn't be created.
      */
-    void throw_failed_to_create_header(std::string collection_name = "");
+    void throw_failed_to_create_header(const std::string &collection_name = "");
 
     /**
      * @param collection_name Name of the collection whose header couldn't be updated. Default value is empty string for the database header.
      * @brief Prints out an error message saying the header file couldn't be updated.
      */
-    void throw_failed_to_update_header(std::string collection_name = "");
+    void throw_failed_to_update_header(const std::string &collection_name = "");
 
     /**
      * @param collection_name Name of the collection.
      * @brief Prints error message saying the collection doesn't exist in the database.
      */
-    void throw_no_such_collection(std::string collection_name);
+    void throw_no_such_collection(const std::string &collection_name);
 
     /**
      * @param failed_paths List of failed paths.
@@ -80,7 +80,15 @@ namespace nosqlite {
      * @brief Reads the JSON string into a json object or throws an error if the JSON is invalid.
      * @return A json object or nullptr.
      */
-    json read_and_parse_json(std::string json_content);
+    json read_and_parse_json(const std::string &json_content);
+
+    /**
+     * @param content JSON object.
+     * @param fields Nested fields to access.
+     * @brief Access the json content inside the nested field that is the last element of the fields vector.
+     * @return A JSON object with the content of the field should it exist and null otherwise. Should no fields be provided the original JSON is returned.
+     */
+    json access_nested_fields(json content, std::vector<std::string> fields);
 }
 
 #endif

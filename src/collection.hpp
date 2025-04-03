@@ -4,7 +4,9 @@
 #ifndef COLLECTION_CLASS_H
 #define COLLECTION_CLASS_H
 
+#include "hash_index.hpp"
 #include <string>
+#include <vector>
 #include <json.hpp>
 using json = nlohmann::json;
 
@@ -30,6 +32,11 @@ namespace nosqlite {
          * @brief Number of documents in the collection.
          */
         unsigned long long number_of_documents;
+
+        /**
+         * @brief List if indexes associated with the collection.
+         */
+        std::vector<hash_index> indexes;
 
         /**
          * @param path_to_json Path to the directory with the files to build the collection.
@@ -96,6 +103,13 @@ namespace nosqlite {
          * @brief Adds a new document to the collection and updates the indices.
          */
         int add_document(const std::string &json_content);
+
+        /**
+         * @param field Field to be indexed
+         * @brief Creates a hash index on the field parameter or on a nested field should there be any more parameters
+         */
+        void create_hash_index(const std::string &field, ...);
+
     };
     
 } // namespace nosqlite

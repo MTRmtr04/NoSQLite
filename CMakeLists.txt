@@ -13,7 +13,10 @@ add_executable(${PROJECT_NAME}
             src/database.hpp
             src/database.cpp
             src/collection.hpp
-            src/collection.cpp)
+            src/collection.cpp
+            src/hash_index.hpp
+            src/hash_index.cpp)
+
 
 
 target_include_directories(nosqlite PRIVATE include)

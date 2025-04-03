@@ -12,7 +12,7 @@ collection::collection(const std::string &path) : path(path) {
     this->build_from_existing();
 }
 
-collection::collection(const std::string &path, const std::string &path_to_json) : path(path), number_of_documents(0) {
+collection::collection(const std::string &path, const std::string &path_to_json) : path(path), number_of_documents(0), indexes({}) {
     this->build_from_scratch(path_to_json);
 }
 
@@ -195,3 +195,8 @@ int collection::add_document(const std::string &json_content, bool update_header
 int collection::add_document(const std::string &json_content) {
     return this->add_document(json_content, true);
 }
+
+void collection::create_hash_index(const std::string &field, ...) {
+    
+}
+
