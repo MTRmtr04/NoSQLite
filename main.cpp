@@ -44,7 +44,6 @@ int main() {
     // obj["test"].push_back("help");
     // cout << obj;
 
-/*
     //For testing Read 
     database db("db", "../dataset");
     collection* col = db.get_collection("data_movies");
@@ -52,11 +51,14 @@ int main() {
     //std::string field = "genres";
     //std::string value = "Comedy";
     
-    std::string field = "released";
-    std::string value = "2012-09-21T00:00:00Z";
+    //std::string field = "released.$date";
+    //std::string value = "2012-09-21T00:00:00Z";
  
-    //std::string field = "rating";
-    //double value = 5.8; 
+    std::string field = "tomatoes.viewer.rating";
+    double value = 3.8;
+    
+    //std::string field = "imdb.id";
+    //int value = 1723121;
 
     std::vector<json> results = col->read(field, value);
     
@@ -67,7 +69,7 @@ int main() {
     } else {
         std::cout << "No documents found with " << field << " = " << value << std::endl;
     }
-*/
+
 
 /*
     //For testing Create

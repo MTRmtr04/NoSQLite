@@ -122,15 +122,6 @@ namespace nosqlite {
         std::vector<json> read(const std::string &field, const json &value) const;
 
         /**
-         * @param doc The JSON object to search in.
-         * @param field  Name of the fields to search for.
-         * @param value Value of the field to macth.
-         * @brief Recursively searches for a given field and value inside a JSON object.
-         * @return true if the field is found and matches the given value, false otherwise.
-         */
-        bool readHelper(const json &doc, const std::string &field, const json &value) const;
-
-        /**
          * @param field Field to be indexed.
          * @param fields List of fields to reach the desired field should it be nested.
          * @brief Creates a hash index on the field parameter or on a nested field should there be any more parameters.
