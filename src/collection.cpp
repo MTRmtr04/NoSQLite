@@ -214,41 +214,17 @@ int nosqlite::collection::create_document(const json &new_document) {
     return this->add_document(doc_copy, true);
 }
 
-
-// Recursively searches for a given field and value inside a JSON object 
-bool collection::readHelper(const json &doc, const std::string &field, const json &value) const {
-    if (doc.contains(field)) {
-        const json& field_data = doc[field];
-
-        // Handle direct matches
-        if (field_data == value){
-            return true;
-        } 
-        
-        // Handle special cases like "$date" or "$oid"
-        if (field_data.is_object()) {
-            if ((field_data.contains("$date") && field_data["$date"] == value) ||
-                (field_data.contains("$oid") && field_data["$oid"] == value)) {
-                return true;
-            }
-        }
-    }
-
-    // Recursively search in nested objects
-    for (const auto& [key, nested_value] : doc.items()) {
-        if (nested_value.is_object() || nested_value.is_array()) {
-            if (readHelper(nested_value, field, value)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 std::vector<json> collection::read(const std::string &field, const json &value) const {
     std::vector<json> results;
     fs::path collection_path = this->path;
+
+    // Split the field into nested fields
+    std::vector<std::string> fields;
+    std::stringstream ss(field);
+    std::string current_segment;
+    while (std::getline(ss, current_segment, '.')) {
+        fields.push_back(current_segment);
+    }
 
     for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
         if (file_path.extension() != ".json" || file_path.filename() == "header.json"){
@@ -256,11 +232,10 @@ std::vector<json> collection::read(const std::string &field, const json &value) 
         } 
 
         json file_content = read_and_parse_json(file_path);
-        if (file_content.is_array()) {
-            for (const auto &doc : file_content) {
-                if (readHelper(doc, field, value)) {
-                    results.push_back(doc);
-                }
+        for (const auto &doc : file_content) {
+            json nested_value = access_nested_fields(doc, fields);
+            if (nested_value == value) {
+                results.push_back(doc);
             }
         }
     }
