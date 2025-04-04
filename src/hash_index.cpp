@@ -63,7 +63,7 @@ void hash_index::build_index(const std::vector<std::string> &fields) {
 
             if (fs::exists(path_to_index_file)) {
                 json index = read_and_parse_json(path_to_index_file);
-                index[hash].push_back(p.string());
+                index[hash.substr(4)].push_back(p.string());
 
                 std::ofstream file(path_to_index_file);
                 if (file.is_open()) file << index;
@@ -75,7 +75,7 @@ void hash_index::build_index(const std::vector<std::string> &fields) {
                 std::ofstream file(path_to_index_file);
                 if (file.is_open()) {
                     json index = {};
-                    index[hash].push_back(p.string());
+                    index[hash.substr(4)].push_back(p.string());
                     file << index;
                 }
                 else throw_failed_to_create_file(path_to_index_file);
