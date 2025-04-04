@@ -122,8 +122,8 @@ namespace nosqlite {
         std::vector<json> read(const std::string &field, const json &value) const;
 
         /**
-         * @param field Field to be indexed.
-         * @param fields List of fields to reach the desired field should it be nested.
+         * @param field First field. Field to be indexed if only one argument is given.
+         * @param fields All fields, in nesting order, required to reach the desired (last) field.
          * @brief Creates a hash index on the field parameter or on a nested field should there be any more parameters.
          */
         template<typename... Fields>

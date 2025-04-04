@@ -87,3 +87,51 @@ void hash_index::build_index(const std::vector<std::string> &fields) {
     }
 
 }
+
+void hash_index::update_index(json original_value, json updated_value, const std::string &document_path) {
+    //Uses original_value to find and delete index entry for document in document_path
+    std::string hash = hash_json(original_value);
+    fs::path path_to_index_file = fs::path(this->path) / hash.substr(0, 2) / hash.substr(2, 2) / "index.json";;
+    if (!fs::exists(path_to_index_file)) {
+        //TODO: error handling
+        return;
+    }
+    json index = read_and_parse_json(path_to_index_file);
+    size_t n = index[hash.substr(4)].erase(document_path);
+
+    if (n == 0) {
+       //TODO: error handling 
+       return;
+    }
+
+    std::ofstream file(path_to_index_file);
+    if (file.is_open()) file << index;
+    else throw_failed_to_open_file(path_to_index_file);
+
+    file.close();
+
+    //Created new index entry with updated_value
+    hash = hash_json(updated_value);
+    path_to_index_file = fs::path(this->path) / hash.substr(0, 2) / hash.substr(2, 2) / "index.json";
+    if (fs::exists(path_to_index_file)) {
+        json index = read_and_parse_json(path_to_index_file);
+        index[hash.substr(4)].push_back(document_path);
+
+        std::ofstream file(path_to_index_file);
+        if (file.is_open()) file << index;
+        else throw_failed_to_open_file(path_to_index_file);
+
+        file.close();
+    }
+    else {
+        std::ofstream file(path_to_index_file);
+        if (file.is_open()) {
+            json index = {};
+            index[hash.substr(4)].push_back(document_path);
+            file << index;
+        }
+        else throw_failed_to_create_file(path_to_index_file);
+
+        file.close();
+    }
+}
