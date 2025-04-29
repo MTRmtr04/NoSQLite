@@ -243,4 +243,72 @@ std::vector<json> collection::read(const std::string &field, const json &value) 
     return results;
 }
 
+int collection::delete_document(const std::string &field, const json &value) {
+    int docs_removed = 0;
+    fs::path collection_path = this->path;
 
+    std::vector<std::string> fields;
+    std::stringstream ss(field);
+    std::string current_segment;
+    while (std::getline(ss, current_segment, '.')) {
+        fields.push_back(current_segment);
+    }
+
+    for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
+        if (file_path.extension() != ".json" || file_path.filename() == "header.json"){
+            continue;
+        } 
+
+        json file_content = read_and_parse_json(file_path);
+        json remaining_docs = json::array();
+
+        for (const auto &doc : file_content) {
+            try {
+                json nested_value = access_nested_fields(doc, fields);
+                if (nested_value == value) {
+                    docs_removed++;
+                } else {
+                    remaining_docs.push_back(doc);
+                }
+            } catch (const json::exception& e) {
+                // Handle the case where the field does not exist
+                remaining_docs.push_back(doc);
+            }
+        }
+
+        // If documents were removed update the file
+        if (docs_removed > 0) {
+            if (remaining_docs.empty()) {
+                fs::remove(file_path);
+            } else {
+                std::ofstream file(file_path);
+                if (file.is_open()) {
+                    file << remaining_docs << std::endl;
+                    file.close();
+                } else {
+                    throw_failed_to_open_file(file_path);
+                    return -1;
+                }
+            }
+        }
+    }
+
+    // Update if documents were deleted
+    if (docs_removed > 0) {
+        fs::path header_path = fs::path(this->path) / "header.json";
+        std::ofstream header(header_path);
+        if (header.is_open()) {
+            json json_header;
+            json_header["number_of_documents"] = this->number_of_documents - docs_removed;
+            header << json_header << std::endl;
+            header.close();
+            this->number_of_documents -= docs_removed;
+        } else {
+            throw_failed_to_open_file(header_path);
+            throw_failed_to_update_header(this->get_name());
+            return -1;
+        }
+    }
+
+    return docs_removed;
+}
