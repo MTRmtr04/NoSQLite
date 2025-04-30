@@ -7,6 +7,7 @@
 using namespace nosqlite;
 using json = nlohmann::json;
 
+// TODO: Add index names to the header file so as to make creation at the start more efficient.
 
 collection::collection(const std::string &path) : path(path) {
     this->build_from_existing();
@@ -86,7 +87,7 @@ void collection::build_from_scratch(const std::string &path_to_json) {
         // TODO: Roll back changes if header creation fails. CHECK WITH PROF
     }
 
-    // TODO: Build collection's indices. 
+    // TODO: Build collection's indices.
 }
 
 void collection::build_from_existing() {
@@ -98,7 +99,15 @@ void collection::build_from_existing() {
     json header_json = read_and_parse_json(header);
     this->number_of_documents = header_json["number_of_documents"];
 
-    // TODO: Build indices.
+    // Build indices.
+    fs::path indexes_path = fs::path(this->path) / "indexes";
+    if (fs::exists(indexes_path)) {
+        for (const fs::path &index_path : fs::directory_iterator(indexes_path)) {
+            if (fs::is_directory(index_path)) {
+                this->indexes[get_last_dir(index_path)] = new hash_index(index_path);
+            }
+        }
+    }
 }
 
 std::string collection::get_path() const {
@@ -134,7 +143,7 @@ int collection::add_document(json &json_object, bool update_header) {
     // Prints the path for the created files
     //std::cout << "New document created here: " << path_to_document << std::endl;
     
-        // Create a new one or edit the file if it already exists (in case of a hash collision).
+    // Create a new one or edit the file if it already exists (in case of a hash collision).
     if (fs::exists(path_to_document)) {
         json json_file = read_and_parse_json(path_to_document);
         std::ofstream file(path_to_document);
@@ -214,33 +223,63 @@ int nosqlite::collection::create_document(const json &new_document) {
     return this->add_document(doc_copy, true);
 }
 
-std::vector<json> collection::read(const std::string &field, const json &value) const {
+std::vector<json> collection::read(const std::vector<std::string> &field, const json &value) const {
+
+    if (field.size() == 0) return {};
+
     std::vector<json> results;
     fs::path collection_path = this->path;
 
-    // Split the field into nested fields
-    std::vector<std::string> fields;
-    std::stringstream ss(field);
-    std::string current_segment;
-    while (std::getline(ss, current_segment, '.')) {
-        fields.push_back(current_segment);
-    }
+    std::string index_name = build_index_name(field);
 
-    for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
-        if (file_path.extension() != ".json" || file_path.filename() == "header.json"){
-            continue;
-        } 
+    if (this->indexes.find(index_name) != this->indexes.end()) {
 
-        json file_content = read_and_parse_json(file_path);
-        for (const auto &doc : file_content) {
-            json nested_value = access_nested_fields(doc, fields);
-            if (nested_value == value) {
-                results.push_back(doc);
+        std::vector<std::string> paths = this->consult_hash_index(index_name, value);
+        for (const std::string &path : paths) {
+
+            json documents = read_and_parse_json(fs::path(path));
+            for (const json &document : documents)
+                if (access_nested_fields(document, field) == value) results.push_back(document);
+
+        }
+        
+    } else {
+        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
+            if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
+                continue;
+            } 
+
+            json file_content = read_and_parse_json(file_path);
+            for (const json &doc : file_content) {
+                json nested_value = access_nested_fields(doc, field);
+                if (nested_value == value) {
+                    results.push_back(doc);
+                }
             }
         }
     }
-
     return results;
+}
+
+void collection::create_hash_index(const std::vector<std::string> &field) {
+
+    if (field.size() == 0) return;
+
+    std::string name = build_index_name(field);
+
+    if (this->indexes.find(name) != this->indexes.end()) return;
+
+    std::string path = this->path + "/indexes/" + name;
+    
+    hash_index* index = new hash_index(path, field);
+
+    this->indexes[name] = index;
+}
+
+std::vector<std::string> collection::consult_hash_index(const std::string &index_name, const json &value) const {
+    hash_index *index = this->indexes.at(index_name);
+
+    return index->consult(value);
 }
 
 

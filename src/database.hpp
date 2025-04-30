@@ -78,6 +78,13 @@ namespace nosqlite {
          * @return Pointer to the collection or nullptr if it doesn't exist.
          */
         collection* get_collection(const std::string &col) const;
+        
+        /**
+         * @param col_name Name of the collection.
+         * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
+         * @brief Create an index on the collection and field in the parameters.
+         */
+        void create_hash_index(const std::string &col_name, const std::vector<std::string> &field);
        
     };
 } // namespace nosqlite
