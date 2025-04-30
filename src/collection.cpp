@@ -260,11 +260,27 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     bool updated = false;
     for(auto &doc : doc_array){
         if(doc.contains("id") && doc["id"] == id){
+            std::vector<std::string> fields;
+            for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
+                if(!doc.contains(it.key()) || doc[it.key()].is_null()){
+                    fields.push_back(it.key());
+                }
+            }
+
+            if(!fields.empty()){
+                std::cerr << "Error: The following fields do not exist on the document you're accessing:\n";
+                for(const auto& field : fields){
+                    std::cerr << " - " << field << std::endl;
+                }
+                return 1;
+            }
+
             for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
                 if(it.key() != "id"){
                     doc[it.key()] = it.value();
                 }
             }
+
             updated = true;
             break;
         }

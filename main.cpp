@@ -47,8 +47,8 @@ int main() {
     database db("db", "../dataset");
     collection* col = db.get_collection("data_movies");
 
-/*For testing Read 
-
+/*
+    //For testing Read 
 
     //std::string field = "genres";
     //std::string value = "Comedy";
@@ -94,7 +94,7 @@ int main() {
     std::cout << "Before the update:\n" << before.dump(4) << "\n";
 
     json update_fields = {
-        {"year", 2024},
+        {"blablala", 2024},
         {"director", "New Director Name"}
     };
 
