@@ -114,33 +114,28 @@ namespace nosqlite {
         int create_document(const nlohmann::json &new_document);
 
         /**
-         * @param field Name of the fields to search for.
+         * @param field List of nested fields to search on.
          * @param value Value of the field to macth.
          * @brief Searches for a document in the collection with the given field and value.
          * @return Returns a vector of JSON objects that match the search.
          */
-        std::vector<json> read(const std::string &field, const json &value) const;
+        std::vector<json> read(const std::vector<std::string> &field, const json &value) const;
 
         int update_document(unsigned long long id, const json& updated_data);
         json get_document(unsigned long long id) const;
 
         /**
-         * @param field Field to be indexed.
-         * @param fields List of fields to reach the desired field should it be nested.
-         * @brief Creates a hash index on the field parameter or on a nested field should there be any more parameters.
+         * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
+         * @brief Creates a hash index on the field parameter.
          */
-        template<typename... Fields>
-        void create_hash_index(const std::string &field, Fields... fields) {
-            // TODO: Error handling. Incompatible types
-            std::vector<std::string> all_fields = {field, fields...};
+        void create_hash_index(const std::vector<std::string> &field);
 
-            std::string name = build_index_name(all_fields);
-            std::string path = this->path + "/indexes/" + name;
-            
-            hash_index* index = new hash_index(path, all_fields);
-
-            this->indexes[name] = index;
-        }
+        /**
+         * @param index_name Name of the index.
+         * @param value Value to find in the index.
+         * @brief Wrapper to consult a hash index.
+         */
+        std::vector<std::string> consult_hash_index(const std::string &index_name, const json &value) const;
  
      };
  } // namespace nosqlite

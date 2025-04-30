@@ -102,12 +102,10 @@ namespace nosqlite {
     }
 
     json access_nested_fields(json content, std::vector<std::string> fields) {
-        
-        json obj = content;
+        json obj = content;        
         for (const std::string &field : fields) {
             obj = obj[field];
         }
-
         return obj;
     }
 
