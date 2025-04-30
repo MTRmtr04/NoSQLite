@@ -44,9 +44,11 @@ int main() {
     // obj["test"].push_back("help");
     // cout << obj;
 
-    //For testing Read 
     database db("db", "../dataset");
     collection* col = db.get_collection("data_movies");
+
+/*For testing Read 
+
 
     //std::string field = "genres";
     //std::string value = "Comedy";
@@ -69,7 +71,7 @@ int main() {
     } else {
         std::cout << "No documents found with " << field << " = " << value << std::endl;
     }
-
+*/
 
 /*
     //For testing Create
@@ -87,6 +89,22 @@ int main() {
     col->create_document(new_film);
     cout << "After: " << col->get_number_of_documents() << endl;
 */
+    unsigned long long id = 10;
+    json before = col->get_document(id);
+    std::cout << "Before the update:\n" << before.dump(4) << "\n";
+
+    json update_fields = {
+        {"year", 2024},
+        {"director", "New Director Name"}
+    };
+
+    int result = col->update_document(id, update_fields);
+    if(result == 0){
+        json after = col->get_document(10);
+        std::cout << "After the update:\n" << after.dump(4) << std::endl;
+    } else {
+        cout << "Error on updating the document!" << endl;
+    }
 
   return 0;
 }

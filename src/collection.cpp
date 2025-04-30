@@ -1,5 +1,6 @@
 #include "collection.hpp"
 #include "auxiliary.hpp"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
@@ -122,14 +123,14 @@ int collection::add_document(json &json_object, bool update_header) {
     // TODO: Update indices
 
     // Hash the id.
-    std::string id_hash = hash_integer(this->number_of_documents);
+    std::string idHash = hash_integer(this->number_of_documents);
     
     // Create the directory
-    fs::path directory = fs::path(this->path) / id_hash.substr(0, 2) / id_hash.substr(2, 2);
+    fs::path directory = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2);
     fs::create_directories(directory);
 
     // Build the path for the file according to the id hash.
-    fs::path path_to_document = directory / id_hash.substr(4).append(".json");
+    fs::path path_to_document = directory / idHash.substr(4).append(".json");
     
     // Prints the path for the created files
     //std::cout << "New document created here: " << path_to_document << std::endl;
@@ -244,3 +245,63 @@ std::vector<json> collection::read(const std::string &field, const json &value) 
 }
 
 
+//Update the entire object
+int collection::update_document(unsigned long long id, const json& updated_data){
+    std::string idHash = hash_integer(id);
+    fs::path directory = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2);
+    fs::path path_to_doc = directory / idHash.substr(4).append(".json");
+
+    if(!fs::exists(path_to_doc)){
+        std::cerr << "Error: Document with ID " << id << "does not exist." << std::endl;
+        return 1;
+    }
+
+    json doc_array = read_and_parse_json(path_to_doc);
+    bool updated = false;
+    for(auto &doc : doc_array){
+        if(doc.contains("id") && doc["id"] == id){
+            for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
+                if(it.key() != "id"){
+                    doc[it.key()] = it.value();
+                }
+            }
+            updated = true;
+            break;
+        }
+    }
+
+    if(updated){
+        std::ofstream file(path_to_doc);
+        if(file.is_open()){
+            file << doc_array.dump(4);
+            file.close();
+            return 0;
+        } else {
+            std::cerr << "Error: Failed to write updated document to file." << std::endl;
+            return 1;
+        }
+    } else {
+        std::cerr << "Error: Document with ID " << id << " not found in file." << std::endl;
+        return 1;
+    }
+}
+
+json collection::get_document(unsigned long long id) const {
+    std::string idHash = hash_integer(id);
+    fs::path path_to_doc = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2) / idHash.substr(4).append(".json");
+
+    if (!fs::exists(path_to_doc)) {
+        std::cerr << "Error: Document with ID " << id << " does not exist." << std::endl;
+        return json();
+    }
+
+    json doc_array = read_and_parse_json(path_to_doc);
+    for (const auto &doc : doc_array) {
+        if (doc.contains("id") && doc["id"] == id) {
+            return doc;
+        }
+    }
+
+    std::cerr << "Error: Document with ID " << id << " not found inside file." << std::endl;
+    return json();
+}

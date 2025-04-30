@@ -121,6 +121,9 @@ namespace nosqlite {
          */
         std::vector<json> read(const std::string &field, const json &value) const;
 
+        int update_document(unsigned long long id, const json& updated_data);
+        json get_document(unsigned long long id) const;
+
         /**
          * @param field Field to be indexed.
          * @param fields List of fields to reach the desired field should it be nested.
