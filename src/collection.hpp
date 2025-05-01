@@ -137,6 +137,14 @@ namespace nosqlite {
          */
         std::vector<std::string> consult_hash_index(const std::string &index_name, const json &value) const;
  
+        /**
+          * @param field Name of the field to match for deletion.
+          * @param value Value to match against the field.
+          * @brief Deletes all documents in the collection where the specified field matches the given value.
+          * @return Returns the number of documents deleted or -1 if an error occurred.
+        */
+         int delete_document(const std::string &field, const json &value);
+
      };
  } // namespace nosqlite
  
