@@ -73,7 +73,7 @@ namespace nosqlite {
     json read_and_parse_json(fs::path path) {
         std::ifstream file(path);
         json object;
-       
+ 
         if (file.is_open()) {
             try {
                 object = json::parse(file);
@@ -87,7 +87,7 @@ namespace nosqlite {
         }
 
         file.close();
-        return object;   
+        return object;
     }
 
     json read_and_parse_json(const std::string &json_content) {
@@ -98,11 +98,11 @@ namespace nosqlite {
         catch(const nlohmann::json::parse_error& e) {
             std::cerr << "Error: Invalid JSON string." << std::endl;
         }
-        return object;   
+        return object;
     }
 
     json access_nested_fields(json content, std::vector<std::string> fields) {
-        json obj = content;        
+        json obj = content;
         for (const std::string &field : fields) {
             obj = obj[field];
         }
@@ -115,7 +115,7 @@ namespace nosqlite {
         for (const std::string &field : fields) {
             name +=  "_" + field;
         }
-        
+ 
         return name;
     }
 

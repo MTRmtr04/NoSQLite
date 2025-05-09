@@ -9,7 +9,7 @@ using json = nlohmann::json;
 using namespace nosqlite;
 namespace fs = std::filesystem;
 
-    
+
 database::database(const std::string &path) : path(path) {
     this->build_from_existing();
 }
@@ -36,7 +36,7 @@ void database::build_from_scratch(const std::string &path_to_json) {
             fs::remove_all(entry);
     else fs::create_directories(path_to_database);
 
-    
+ 
     std::vector<std::string> collection_names;
     // Create each individual collection
     for (const fs::path &entry : fs::directory_iterator(path_to_json)) {

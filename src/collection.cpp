@@ -26,7 +26,7 @@ collection::~collection() {
 }
 
 void collection::build_from_scratch(const std::string &path_to_json) {
-    
+ 
     // Checks if the directory with the json files to create the database with exists.
     if (int ret = check_path_existence(path_to_json) != 0) return;
 
@@ -133,17 +133,17 @@ int collection::add_document(json &json_object, bool update_header) {
 
     // Hash the id.
     std::string idHash = hash_integer(this->number_of_documents);
-    
+ 
     // Create the directory
     fs::path directory = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2);
     fs::create_directories(directory);
 
     // Build the path for the file according to the id hash.
     fs::path path_to_document = directory / idHash.substr(4).append(".json");
-    
+
     // Prints the path for the created files
     //std::cout << "New document created here: " << path_to_document << std::endl;
-    
+
     // Create a new one or edit the file if it already exists (in case of a hash collision).
     if (fs::exists(path_to_document)) {
         json json_file = read_and_parse_json(path_to_document);
@@ -211,7 +211,7 @@ int collection::add_document(const std::string &json_content, bool update_header
 int collection::add_document(const std::string &json_content) {
     return this->add_document(json_content, true);
 }
-    
+
 int nosqlite::collection::create_document(const json &new_document) {
     json doc_copy = new_document;
 
@@ -243,7 +243,7 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
                 if (access_nested_fields(document, field) == value) results.push_back(document);
 
         }
-        
+
     } else {
         for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
             if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
@@ -271,7 +271,7 @@ void collection::create_hash_index(const std::vector<std::string> &field) {
     if (this->indexes.find(name) != this->indexes.end()) return;
 
     std::string path = this->path + "/indexes/" + name;
-    
+
     hash_index* index = new hash_index(path, field);
 
     this->indexes[name] = index;
@@ -296,9 +296,12 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     }
 
     json doc_array = read_and_parse_json(path_to_doc);
+    json original; json final;
     bool updated = false;
     for(auto &doc : doc_array){
         if(doc.contains("id") && doc["id"] == id){
+            original = doc;
+
             std::vector<std::string> fields;
             for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
                 if(!doc.contains(it.key()) || doc[it.key()].is_null()){
@@ -320,6 +323,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
                 }
             }
 
+            final = doc;
             updated = true;
             break;
         }
@@ -330,6 +334,12 @@ int collection::update_document(unsigned long long id, const json& updated_data)
         if(file.is_open()){
             file << doc_array.dump(4);
             file.close();
+            // This here is all broken. fuck it for now god damn
+            for (auto it = updated_data.begin(); it != updated_data.end(); ++it) {
+                std::string field = it.key();
+                std::vector<std::string> fields = {field};
+                this->indexes.at(build_index_name(fields))->update_index(original, final, path_to_doc.string());
+            }
             return 0;
         } else {
             std::cerr << "Error: Failed to write updated document to file." << std::endl;
