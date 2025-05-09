@@ -15,6 +15,8 @@ hash_index::hash_index(const std::string &path, const std::vector<std::string> &
     this->build_index(fields);
 }
 
+hash_index::hash_index(const std::string path) : path(path) {}
+
 std::string hash_index::get_path() {
     return this->path;
 }
@@ -85,7 +87,25 @@ void hash_index::build_index(const std::vector<std::string> &fields) {
         }
 
     }
+}
 
+std::vector<std::string> hash_index::consult(const json &value) {
+    
+    std::vector<std::string> documents({});
+    
+    std::string hash = value == nullptr ? hash_string("NULL") : hash_json(value);
+
+    fs::path index_file_path(this->path);
+    index_file_path = index_file_path / hash.substr(0, 2) / hash.substr(2, 2) / "index.json";
+    if (fs::exists(index_file_path)) {
+        json index_file = read_and_parse_json(index_file_path);
+
+        json doc = index_file[hash.substr(4)];
+
+        if (doc != nullptr) documents = doc;
+    }
+
+    return documents;
 }
 
 void hash_index::update_index(json original_value, json updated_value, const std::string &document_path) {
