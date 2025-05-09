@@ -100,3 +100,10 @@ collection* database::get_collection(const std::string &col) const {
 void database::set_collection(const std::string &colletion_name, collection* col) {
     this->collections[colletion_name] = col;
 }
+
+void database::create_hash_index(const std::string &col_name, const std::vector<std::string> &field) {
+    collection *col = this->get_collection(col_name);
+
+    col->create_hash_index(field);
+}
+

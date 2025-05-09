@@ -31,7 +31,13 @@ namespace nosqlite {
     public:
 
         /**
-         * @param path Path to the collection to be indexed.
+         * @param path Path to the index.
+         * @brief Constructor for the hash_index class. Constructs the index object of an index already in memory.
+         */
+        hash_index(const std::string path);
+
+        /**
+         * @param path Path to the where the index will be created.
          * @param fields List of nested fields. Only the last one will be indexed.
          * @brief Constructor for the hash_index class.
          */
@@ -46,6 +52,13 @@ namespace nosqlite {
          * @brief Getter for the indexed field name derived from the path attribute.
          */
         std::string get_field();
+
+        /**
+         * @param value Value of the indexed field.
+         * @return List of the paths to the files containing the documents with the fields that hash to the parameter value.
+         * @brief Consults the index to get the paths to the documents with the coresponding hash.
+         */
+        std::vector<std::string> consult(const json &value);
     
     };
 
