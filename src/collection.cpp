@@ -1,5 +1,6 @@
 #include "collection.hpp"
 #include "auxiliary.hpp"
+#include <functional>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -256,6 +257,59 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
                 if (nested_value == value) {
                     results.push_back(doc);
                 }
+            }
+        }
+    }
+    return results;
+}
+
+std::vector<json> collection::read_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) const{
+    std::vector<json> results;
+    fs::path collection_path = this->path;
+
+    std::function<bool(const json&, const std::string&, const json&)> compare;
+    compare = [&](const json &doc_value, const std::string &op, const json &target) -> bool {
+        if (doc_value.is_array()) {
+            for (const auto &val : doc_value) {
+                if (compare(val, op, target)) return true;
+            }
+            return false;
+        }
+    
+        if (op == "==") return doc_value == target;
+        if (op == "!=") return doc_value != target;
+        if (op == ">")  return doc_value.is_number() && target.is_number() && doc_value > target;
+        if (op == "<")  return doc_value.is_number() && target.is_number() && doc_value < target;
+        if (op == ">=") return doc_value.is_number() && target.is_number() && doc_value >= target;
+        if (op == "<=") return doc_value.is_number() && target.is_number() && doc_value <= target;
+    
+        return false;
+    };
+
+    for(const fs::path &file_path : fs::recursive_directory_iterator(collection_path)){
+        if(file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
+            continue;
+        }
+        
+        json file_content = read_and_parse_json(file_path);
+        for(const json &doc : file_content){
+            bool satisfies_all = true;
+
+            for(const auto &[field_path, op, target_value] : conditions){
+                try{
+                    json actual_value = access_nested_fields(doc, field_path);
+                    if(!compare(actual_value, op, target_value)){
+                        satisfies_all = false;
+                        break;
+                    }
+                } catch(...){
+                    satisfies_all = false;
+                    break;
+                }
+            }
+
+            if(satisfies_all){
+                results.push_back(doc);
             }
         }
     }

@@ -121,6 +121,9 @@ namespace nosqlite {
          */
         std::vector<json> read(const std::vector<std::string> &field, const json &value) const;
 
+        std::vector<json> read_with_conditions(
+            const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) const;
+
         int update_document(unsigned long long id, const json& updated_data);
         json get_document(unsigned long long id) const;
 

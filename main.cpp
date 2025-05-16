@@ -27,13 +27,27 @@ int main() {
     database db("db");
     collection* col = db.get_collection("data_movies");
 
+    std::vector<std::tuple<std::vector<std::string>, std::string, json>> conditions = {
+        {{"year"}, ">", 2008},
+        {{"year"}, "<", 2010},
+        {{"imdb", "rating"}, ">", 6},
+        {{"tomatoes","critic", "rating"}, ">", 7}
+    };
 
-    vector<string> field = {"tomatoes", "viewer", "rating"};
-    double value = 3.8;
-    
-    db.create_hash_index("movies", field);
+    auto docs = col->read_with_conditions(conditions);
 
-    std::vector<json> results = col->read(field, value);
+    if (docs.empty()) {
+        cout << "Nenhum documento encontrado.\n";
+    } else {
+        int i = 1;
+        cout << "Documentos encontrados:\n";
+        for (const auto& doc : docs) {
+            cout << "----------" << "Documento " << i << "----------" << std::endl;
+            cout << doc.dump(4) << "\n\n";
+            cout << "----------------------------------" << std::endl;
+            i++;
+        }
+    }
 
     return 0;
 }
