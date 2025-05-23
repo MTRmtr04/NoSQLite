@@ -25,8 +25,9 @@ int main() {
 
 
     database db("db");
-    collection* col = db.get_collection("data_movies");
+    collection* col = db.get_collection("movies");
 
+    // READ
     std::vector<std::tuple<std::vector<std::string>, std::string, json>> conditions = {
         {{"year"}, ">", 2008},
         {{"year"}, "<", 2010},
@@ -48,6 +49,34 @@ int main() {
             i++;
         }
     }
+
+    // DELETE 
+    int initial_count = col->get_number_of_documents();
+    cout << "Initial document count: " << initial_count << endl;
+
+    json test_movie = {
+        {"title", "Test Movie"},
+        {"year", 2025},
+        {"imdb", {{"rating", 0.5}}}
+    };
+
+    // Add the test movie
+    col->create_document(test_movie);
+    cout << "Current count: " << col->get_number_of_documents() << endl;
+
+    // Delete the movie created
+    int deleted = col->delete_with_conditions({
+        {{"imdb", "rating"}, "<", 1.0}
+    });
+    cout << "Deleted " << deleted << " movie" << endl;
+
+    // Verify deletion
+    bool exists = !col->read_with_conditions({
+        {{"title"}, "==", "Test Movie"}
+    }).empty();
+
+    cout << "Test movie still exists: " << (exists ? "YES" : "NO -> SUCCESS") << endl;
+    cout << "Final count: " << col->get_number_of_documents() << endl;
 
     return 0;
 }

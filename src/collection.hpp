@@ -147,6 +147,13 @@ namespace nosqlite {
           * @return Returns the number of documents deleted or -1 if an error occurred.
         */
          int delete_document(const std::string &field, const json &value);
+        
+        /**
+         * @param conditions Vector of tuples with (field_path, operator, value)
+         * @brief Deletes all documents that satisfy all conditions
+         * @return Number of documents deleted or -1 if an error occurred
+         */
+        int delete_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions);
 
      };
  } // namespace nosqlite

@@ -416,40 +416,76 @@ json collection::get_document(unsigned long long id) const {
 }
 
 int collection::delete_document(const std::string &field, const json &value) {
-    int docs_removed = 0;
-    fs::path collection_path = this->path;
-
     std::vector<std::string> fields;
     std::stringstream ss(field);
-    std::string current_segment;
-    while (std::getline(ss, current_segment, '.')) {
-        fields.push_back(current_segment);
-    }
+    std::string segment;
+    while (std::getline(ss, segment, '.')){
+        fields.push_back(segment);
+    } 
+
+    return delete_with_conditions({{fields, "==", value}});
+}
+
+int collection::delete_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) {
+    int docs_removed = 0;
+    fs::path collection_path = this->path;
+    bool modified = false;
+
+    std::function<bool(const json&, const std::string&, const json&)> compare;
+    compare = [&](const json &doc_value, const std::string &op, const json &target) -> bool {
+        if (doc_value.is_array()) {
+            for (const auto &val : doc_value) {
+                if (compare(val, op, target)) return true;
+            }
+            return false;
+        }
+    
+        if (op == "==") return doc_value == target;
+        if (op == "!=") return doc_value != target;
+        if (op == ">")  return doc_value.is_number() && target.is_number() && doc_value > target;
+        if (op == "<")  return doc_value.is_number() && target.is_number() && doc_value < target;
+        if (op == ">=") return doc_value.is_number() && target.is_number() && doc_value >= target;
+        if (op == "<=") return doc_value.is_number() && target.is_number() && doc_value <= target;
+    
+        return false;
+    };
 
     for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
-        if (file_path.extension() != ".json" || file_path.filename() == "header.json"){
+        if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
             continue;
         } 
 
         json file_content = read_and_parse_json(file_path);
         json remaining_docs = json::array();
+        bool file_modified = false;
 
         for (const auto &doc : file_content) {
-            try {
-                json nested_value = access_nested_fields(doc, fields);
-                if (nested_value == value) {
-                    docs_removed++;
-                } else {
-                    remaining_docs.push_back(doc);
+            bool satisfies_all = true;
+
+            for (const auto &[field_path, op, target_value] : conditions) {
+                try {
+                    json actual_value = access_nested_fields(doc, field_path);
+                    if (!compare(actual_value, op, target_value)) {
+                        satisfies_all = false;
+                        break;
+                    }
+                } catch (...) {
+                    satisfies_all = false;
+                    break;
                 }
-            } catch (const json::exception& e) {
-                // Handle the case where the field does not exist
+            }
+
+            if (satisfies_all) {
+                docs_removed++;
+                file_modified = true;
+                modified = true;
+            } else {
                 remaining_docs.push_back(doc);
             }
         }
 
         // If documents were removed update the file
-        if (docs_removed > 0) {
+        if (file_modified) {
             if (remaining_docs.empty()) {
                 fs::remove(file_path);
             } else {
@@ -466,7 +502,7 @@ int collection::delete_document(const std::string &field, const json &value) {
     }
 
     // Update if documents were deleted
-    if (docs_removed > 0) {
+    if (modified) {
         fs::path header_path = fs::path(this->path) / "header.json";
         std::ofstream header(header_path);
         if (header.is_open()) {
@@ -484,3 +520,4 @@ int collection::delete_document(const std::string &field, const json &value) {
 
     return docs_removed;
 }
+
