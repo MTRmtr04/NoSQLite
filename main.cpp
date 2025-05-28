@@ -15,7 +15,6 @@ using json = nlohmann::json;
 
 int main() {
 
-
     // auto start = high_resolution_clock::now();
 
     // auto stop = high_resolution_clock::now();
@@ -23,10 +22,30 @@ int main() {
 
     // cout << "first " << duration.count() << endl;
 
+    // string f = "imdb";
+    // string f2 = "rating";
+    // auto start = high_resolution_clock::now();
+    // json t = read_and_parse_json(fs::path("db/movies/eb/c5/99e5dd16b3e2.json"))[0];
+    // auto stop = high_resolution_clock::now();
+    // auto duration = duration_cast<microseconds>(stop - start);
+
+    // std::cout << "third " << duration.count() << std::endl;
+    // cout << t[f][f2] << endl;
+    // cout << access_nested_fields(t, {"imdb", "rating"}) << endl;
 
     database db("db");
     collection* col = db.get_collection("movies");
+    auto start = high_resolution_clock::now();
 
+    vector<json> result = col->read({"imdb", "rating"}, 6.5);
+    cout << result.size() << endl;
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout << "first " << duration.count() << endl;
+    
+
+/*
     // READ
     std::vector<std::tuple<std::vector<std::string>, std::string, json>> conditions = {
         {{"year"}, ">", 2008},
@@ -77,6 +96,7 @@ int main() {
 
     cout << "Test movie still exists: " << (exists ? "YES" : "NO -> SUCCESS") << endl;
     cout << "Final count: " << col->get_number_of_documents() << endl;
+    */
 
     return 0;
 }

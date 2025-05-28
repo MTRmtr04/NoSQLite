@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
+#include <omp.h>
 
 using namespace nosqlite;
 using json = nlohmann::json;
@@ -246,20 +247,53 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
         }
         
     } else {
-        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
-            if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
-                continue;
-            } 
 
-            json file_content = read_and_parse_json(file_path);
-            for (const json &doc : file_content) {
-                json nested_value = access_nested_fields(doc, field);
-                if (nested_value == value) {
-                    results.push_back(doc);
+        std::vector<fs::path> file_paths = {};
+        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) file_paths.push_back(file_path);
+
+        std::vector<std::vector<json>> all_thread_results;
+        int num_threads = 1;
+
+        #pragma omp parallel
+        {
+            std::vector<json> thread_results;
+
+            #pragma omp single
+            {
+                num_threads = omp_get_num_threads();
+                all_thread_results.resize(num_threads);
+            }
+
+            #pragma omp barrier
+
+            int thread_num = omp_get_thread_num();
+
+            #pragma omp for
+            for (int i = 0; i < file_paths.size(); i++) {
+                const fs::path &file_path = file_paths[i];
+
+                if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json") continue; 
+
+                json file_content = read_and_parse_json(file_path);
+                
+                for (const json &doc : file_content) {
+                    json nested_value = access_nested_fields(doc, field);
+                    if (nested_value == value) {
+                        thread_results.push_back(doc);
+                    }
                 }
             }
+
+            all_thread_results[thread_num] = std::move(thread_results);
+        }
+
+        for (int i = 0; i < num_threads; i++) {
+            results.insert(results.end(),
+                              std::make_move_iterator(all_thread_results[i].begin()),
+                              std::make_move_iterator(all_thread_results[i].end()));
         }
     }
+
     return results;
 }
 
