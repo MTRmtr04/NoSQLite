@@ -116,6 +116,21 @@ namespace nosqlite {
      * @return The boolean result of the comparison.
      */
     bool compare(const json &value1, const std::string &op, const json &value2);
+
+    /**
+     * @param all_results Vector of vectors with the results.
+     * @param results Destination of the pooled results.
+     * @brief Pools all of the values in each of the vector of all_results and returns them in a single vector by reference.
+     */
+    void pool_results(const std::vector<std::vector<json>> &all_results, std::vector<json> &results);
+
+    /**
+     * @param collection_path Path to the directory.
+     * @param paths Vector where the paths will be collected.
+     * @brief Collects all of the paths to database files in the directory collection_path.
+     */
+    void collect_paths(const std::string &collection_path, std::vector<fs::path> &paths);
+
 }
 
 #endif

@@ -137,5 +137,19 @@ namespace nosqlite {
         return false;
     }
 
+    void pool_results(const std::vector<std::vector<json>> &all_results, std::vector<json> &results) {
+
+        for (const std::vector<json> &res : all_results) {
+            results.insert(results.end(), std::make_move_iterator(res.begin()), std::make_move_iterator(res.end()));
+        }
+    }
+
+    void collect_paths(const std::string &collection_path, std::vector<fs::path> &paths) {
+        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
+            if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json") continue; 
+            paths.push_back(file_path);
+        }
+    }
+
 
 }
