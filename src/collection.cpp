@@ -235,16 +235,49 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
 
     std::string index_name = build_index_name(field);
 
+
+    // Uses parallel processing to speed up the query.
+    // Each thread has its own vector with results for the documents it collects.
+    // Each thread's result vector gets added to the all_thread_results vector.
+    // At the end of the parallel proccessing section all of the result in all_thread_results are pooled into the same vector and returned.
+    std::vector<std::vector<json>> all_thread_results;
+    int num_threads = 1;
+
     // Check if there is an index for the target field.
     if (this->indexes.find(index_name) != this->indexes.end()) {
         // Uses the index to perform the query.
         std::vector<std::string> paths = this->consult_hash_index(index_name, value);
-        for (const std::string &path : paths) {
 
-            json documents = read_and_parse_json(fs::path(path));
-            for (const json &document : documents)
-                if (access_nested_fields(document, field) == value) results.push_back(document);
+        #pragma omp parallel
+        {
+            std::vector<json> thread_results;
 
+            #pragma omp single
+            {
+                num_threads = omp_get_num_threads();
+                all_thread_results.resize(num_threads);
+            }
+
+            #pragma omp barrier
+
+            int thread_num = omp_get_thread_num();
+
+            #pragma omp for
+            for (int i = 0; i < paths.size(); i++) {
+                const std::string &path = paths[i];
+
+                json documents = read_and_parse_json(fs::path(path));
+                for (const json &document : documents)
+                    if (access_nested_fields(document, field) == value) thread_results.push_back(document);
+            }
+
+            all_thread_results[thread_num] = std::move(thread_results);
+        }
+        
+        for (int i = 0; i < num_threads; i++) {
+            results.insert(results.end(),
+                              std::make_move_iterator(all_thread_results[i].begin()),
+                              std::make_move_iterator(all_thread_results[i].end()));
         }
         
     } else {
@@ -254,9 +287,6 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
             if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json") continue; 
             file_paths.push_back(file_path);
         }
-
-        std::vector<std::vector<json>> all_thread_results;
-        int num_threads = 1;
 
         #pragma omp parallel
         {
