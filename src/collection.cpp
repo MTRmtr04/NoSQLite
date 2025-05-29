@@ -235,8 +235,9 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
 
     std::string index_name = build_index_name(field);
 
+    // Check if there is an index for the target field.
     if (this->indexes.find(index_name) != this->indexes.end()) {
-
+        // Uses the index to perform the query.
         std::vector<std::string> paths = this->consult_hash_index(index_name, value);
         for (const std::string &path : paths) {
 
@@ -247,9 +248,12 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
         }
         
     } else {
-
+        // No index was found. Iterate through all the documents in the database.
         std::vector<fs::path> file_paths = {};
-        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) file_paths.push_back(file_path);
+        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
+            if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json") continue; 
+            file_paths.push_back(file_path);
+        }
 
         std::vector<std::vector<json>> all_thread_results;
         int num_threads = 1;
@@ -271,8 +275,6 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
             #pragma omp for
             for (int i = 0; i < file_paths.size(); i++) {
                 const fs::path &file_path = file_paths[i];
-
-                if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json") continue; 
 
                 json file_content = read_and_parse_json(file_path);
                 
@@ -297,53 +299,79 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
     return results;
 }
 
-std::vector<json> collection::read_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) const{
+std::vector<json> collection::read_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) const {
     std::vector<json> results;
     fs::path collection_path = this->path;
 
-    std::function<bool(const json&, const std::string&, const json&)> compare;
-    compare = [&](const json &doc_value, const std::string &op, const json &target) -> bool {
-        if (doc_value.is_array()) {
-            for (const auto &val : doc_value) {
-                if (compare(val, op, target)) return true;
+    std::tuple<std::vector<std::string>, std::string, json> index_condition = {};
+    std::string index_name = "";
+    bool use_index = false;
+    for(const auto &[field_path, op, target_value] : conditions){
+        if (op == "==") {
+            index_name = build_index_name(field_path);
+            
+            if (this->indexes.find(index_name) != this->indexes.end()) {
+                index_condition = {field_path, op, target_value};
+                use_index = true;
+                break;
             }
-            return false;
         }
-    
-        if (op == "==") return doc_value == target;
-        if (op == "!=") return doc_value != target;
-        if (op == ">")  return doc_value.is_number() && target.is_number() && doc_value > target;
-        if (op == "<")  return doc_value.is_number() && target.is_number() && doc_value < target;
-        if (op == ">=") return doc_value.is_number() && target.is_number() && doc_value >= target;
-        if (op == "<=") return doc_value.is_number() && target.is_number() && doc_value <= target;
-    
-        return false;
-    };
+    }
 
-    for(const fs::path &file_path : fs::recursive_directory_iterator(collection_path)){
-        if(file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
-            continue;
-        }
-        
-        json file_content = read_and_parse_json(file_path);
-        for(const json &doc : file_content){
-            bool satisfies_all = true;
+    if (use_index) {
+        std::vector<std::string> paths = this->consult_hash_index(index_name, std::get<2>(index_condition));
 
-            for(const auto &[field_path, op, target_value] : conditions){
-                try{
-                    json actual_value = access_nested_fields(doc, field_path);
-                    if(!compare(actual_value, op, target_value)){
+        for (const std::string &path : paths) {
+
+            json documents = read_and_parse_json(fs::path(path));
+            for (const json &document : documents) {
+                bool satisfies_all = true;
+                for (const auto &[field_path, op, target_value] : conditions) {
+                    try{
+                        json actual_value = access_nested_fields(document, field_path);
+                        if(!compare(actual_value, op, target_value)){
+                            satisfies_all = false;
+                            break;
+                        }
+                    } catch(...){
                         satisfies_all = false;
                         break;
                     }
-                } catch(...){
-                    satisfies_all = false;
-                    break;
+                }
+
+                if(satisfies_all){
+                    results.push_back(document);
                 }
             }
+        }
+        
 
-            if(satisfies_all){
-                results.push_back(doc);
+    } else {
+        for(const fs::path &file_path : fs::recursive_directory_iterator(collection_path)){
+            if(file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
+                continue;
+            }
+            
+            json file_content = read_and_parse_json(file_path);
+            for(const json &doc : file_content){
+                bool satisfies_all = true;
+
+                for(const auto &[field_path, op, target_value] : conditions){
+                    try{
+                        json actual_value = access_nested_fields(doc, field_path);
+                        if(!compare(actual_value, op, target_value)){
+                            satisfies_all = false;
+                            break;
+                        }
+                    } catch(...){
+                        satisfies_all = false;
+                        break;
+                    }
+                }
+
+                if(satisfies_all){
+                    results.push_back(doc);
+                }
             }
         }
     }

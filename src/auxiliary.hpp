@@ -107,6 +107,15 @@ namespace nosqlite {
      * @brief Builds the name of the hash index
      */
     std::string build_index_name(const std::vector<std::string> &fields);
+
+    /**
+     * @param value1 The first value.
+     * @param op The operation
+     * @param value2 The second value.
+     * @brief Compares the too values according to the operation.
+     * @return The boolean result of the comparison.
+     */
+    bool compare(const json &value1, const std::string &op, const json &value2);
 }
 
 #endif

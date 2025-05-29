@@ -118,6 +118,24 @@ namespace nosqlite {
         
         return name;
     }
+    
+    bool compare(const json &value1, const std::string &op, const json &value2) {
+        if (value1.is_array()) {
+            for (const auto &val : value1) {
+                if (compare(val, op, value2)) return true;
+            }
+            return false;
+        }
+
+        if (op == "==") return value1 == value2;
+        if (op == "!=") return value1 != value2;
+        if (op == ">")  return value1.is_number() && value2.is_number() && value1 > value2;
+        if (op == "<")  return value1.is_number() && value2.is_number() && value1 < value2;
+        if (op == ">=") return value1.is_number() && value2.is_number() && value1 >= value2;
+        if (op == "<=") return value1.is_number() && value2.is_number() && value1 <= value2;
+    
+        return false;
+    }
 
 
 }

@@ -35,9 +35,17 @@ int main() {
 
     database db("db");
     collection* col = db.get_collection("movies");
+    db.create_hash_index("movies", {"year"});
+
+    std::vector<std::tuple<std::vector<std::string>, std::string, json>> conditions = {
+        {{"year"}, "==", 2008},
+        {{"year"}, "<", 2010},
+        {{"imdb", "rating"}, ">", 6},
+        {{"tomatoes","critic", "rating"}, ">", 7}
+    };
     auto start = high_resolution_clock::now();
 
-    vector<json> result = col->read({"imdb", "rating"}, 6.5);
+    vector<json> result = col->read_with_conditions(conditions);
     cout << result.size() << endl;
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
@@ -47,12 +55,7 @@ int main() {
 
 /*
     // READ
-    std::vector<std::tuple<std::vector<std::string>, std::string, json>> conditions = {
-        {{"year"}, ">", 2008},
-        {{"year"}, "<", 2010},
-        {{"imdb", "rating"}, ">", 6},
-        {{"tomatoes","critic", "rating"}, ">", 7}
-    };
+   
 
     auto docs = col->read_with_conditions(conditions);
 
