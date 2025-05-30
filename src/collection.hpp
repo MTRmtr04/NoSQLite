@@ -65,6 +65,8 @@ namespace nosqlite {
          */
         int add_document(json &json_object, bool update_header);
 
+        int delete_single(const fs::path &file_path, const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions);
+
     public:
 
         /**

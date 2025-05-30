@@ -463,7 +463,6 @@ std::vector<std::string> collection::consult_hash_index(const std::string &index
     return index->consult(value);
 }
 
-
 //Update the entire object
 int collection::update_document(unsigned long long id, const json& updated_data){
     std::string idHash = hash_integer(id);
@@ -541,6 +540,55 @@ json collection::get_document(unsigned long long id) const {
     return json();
 }
 
+int collection::delete_single(const fs::path &file_path, const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) {
+    int docs_removed = 0;
+    json file_content = read_and_parse_json(file_path);
+    json remaining_docs = json::array();
+    bool file_modified = false;
+
+    for (const auto &doc : file_content) {
+        bool satisfies_all = true;
+
+        for (const auto &[field_path, op, target_value] : conditions) {
+            try {
+                json actual_value = access_nested_fields(doc, field_path);
+                if (!compare(actual_value, op, target_value)) {
+                    satisfies_all = false;
+                    break;
+                }
+            } catch (...) {
+                satisfies_all = false;
+                break;
+            }
+        }
+
+        if (satisfies_all) {
+            docs_removed++;
+            file_modified = true;
+        } else {
+            remaining_docs.push_back(doc);
+        }
+    }
+
+    // If documents were removed update the file
+    if (file_modified) {
+        if (remaining_docs.empty()) {
+            fs::remove(file_path);
+        } else {
+            std::ofstream file(file_path);
+            if (file.is_open()) {
+                file << remaining_docs << std::endl;
+                file.close();
+            } else {
+                throw_failed_to_open_file(file_path);
+                return -1;
+            }
+        }
+    }
+
+    return docs_removed;
+}
+
 int collection::delete_document(const std::string &field, const json &value) {
     std::vector<std::string> fields;
     std::stringstream ss(field);
@@ -557,78 +605,46 @@ int collection::delete_with_conditions(const std::vector<std::tuple<std::vector<
     fs::path collection_path = this->path;
     bool modified = false;
 
-    std::function<bool(const json&, const std::string&, const json&)> compare;
-    compare = [&](const json &doc_value, const std::string &op, const json &target) -> bool {
-        if (doc_value.is_array()) {
-            for (const auto &val : doc_value) {
-                if (compare(val, op, target)) return true;
-            }
-            return false;
-        }
-    
-        if (op == "==") return doc_value == target;
-        if (op == "!=") return doc_value != target;
-        if (op == ">")  return doc_value.is_number() && target.is_number() && doc_value > target;
-        if (op == "<")  return doc_value.is_number() && target.is_number() && doc_value < target;
-        if (op == ">=") return doc_value.is_number() && target.is_number() && doc_value >= target;
-        if (op == "<=") return doc_value.is_number() && target.is_number() && doc_value <= target;
-    
-        return false;
-    };
-
-    for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
-        if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
-            continue;
-        } 
-
-        json file_content = read_and_parse_json(file_path);
-        json remaining_docs = json::array();
-        bool file_modified = false;
-
-        for (const auto &doc : file_content) {
-            bool satisfies_all = true;
-
-            for (const auto &[field_path, op, target_value] : conditions) {
-                try {
-                    json actual_value = access_nested_fields(doc, field_path);
-                    if (!compare(actual_value, op, target_value)) {
-                        satisfies_all = false;
-                        break;
-                    }
-                } catch (...) {
-                    satisfies_all = false;
-                    break;
-                }
-            }
-
-            if (satisfies_all) {
-                docs_removed++;
-                file_modified = true;
-                modified = true;
-            } else {
-                remaining_docs.push_back(doc);
-            }
-        }
-
-        // If documents were removed update the file
-        if (file_modified) {
-            if (remaining_docs.empty()) {
-                fs::remove(file_path);
-            } else {
-                std::ofstream file(file_path);
-                if (file.is_open()) {
-                    file << remaining_docs << std::endl;
-                    file.close();
-                } else {
-                    throw_failed_to_open_file(file_path);
-                    return -1;
-                }
+    std::tuple<std::vector<std::string>, std::string, json> index_condition = {};
+    std::string index_name = "";
+    bool use_index = false;
+    for(const auto &[field_path, op, target_value] : conditions){
+        if (op == "==") {
+            index_name = build_index_name(field_path);
+        
+            if (this->indexes.find(index_name) != this->indexes.end()) {
+                index_condition = {field_path, op, target_value};
+                use_index = true;
+                break;
             }
         }
     }
 
+    // Uses parallel processing to speed up the query.
+    // The docs_removed variable is shared among the threads.
+    if (use_index) {
+        std::vector<std::string> paths = consult_hash_index(index_name, std::get<2>(index_condition));
+
+        #pragma omp parallel for reduction(+ : docs_removed)
+        for (int i = 0; i < paths.size(); i++) {
+            const std::string &path = paths[i];
+
+            docs_removed += delete_single(fs::path(path), conditions);
+        }
+
+    } else {
+        std::vector<fs::path> file_paths = {};
+        collect_paths(collection_path, file_paths);
+        
+        #pragma omp parallel for reduction(+ : docs_removed)
+        for (int i = 0; i < file_paths.size(); i++) {
+            fs::path file_path = file_paths[i];
+            docs_removed += delete_single(file_path, conditions);
+        }
+    }
+
     // Update if documents were deleted
-    if (modified) {
+    if (docs_removed > 0) {
         fs::path header_path = fs::path(this->path) / "header.json";
         std::ofstream header(header_path);
         if (header.is_open()) {
