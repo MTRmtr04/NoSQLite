@@ -42,7 +42,8 @@ int nosqlite_api::execute(std::vector<json> &results) {
             break;
         }
         case READ: {
-
+            results = this->db->read(this->active_collection, this->conditions);
+            ret = 0;
             break;
         }
         case UPDATE: {
@@ -68,7 +69,6 @@ int nosqlite_api::execute(std::vector<json> &results) {
     return ret;
 }
 
-
 nosqlite_api* nosqlite_api::create(std::string col_name, json document) {
     this->active_query_type = CREATE;
     this->active_collection = col_name;
@@ -76,11 +76,20 @@ nosqlite_api* nosqlite_api::create(std::string col_name, json document) {
     return this;
 }
 
-nosqlite_api* nosqlite_api::read(std::string col_name, condition_type condition = empty_condition) {
+nosqlite_api* nosqlite_api::read(std::string col_name, condition_type condition ) {
     this->active_query_type = READ;
     this->active_collection = col_name;
-    if (condition != empty_condition) this->conditions.push_back(condition);
-
+    if (valid_condition(condition)) this->conditions.push_back(condition);
     return this;
+}
+
+nosqlite_api* nosqlite_api::AND(condition_type condition) {
+    if (valid_condition(condition)) this->conditions.push_back(condition);
+    return this;
+}
+
+bool nosqlite_api::valid_condition(condition_type condition) {
+    if (condition == empty_condition) return false;
+    return condition.op == "==" || condition.op == "!=" || condition.op == ">" || condition.op == "<" || condition.op == ">=" || condition.op == "<=";
 }
 

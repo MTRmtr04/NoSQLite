@@ -19,7 +19,7 @@ using json = nlohmann::json;
  */
 namespace nosqlite {
 
-    enum query_type {NONE, CREATE, READ, UPDATE, DELETE, CREATE_INDEX};
+    enum query_type {NONE, CREATE, READ, UPDATE, DELETE, CREATE_INDEX, DELETE_INDEX, CREATE_COLLECTION, DELETE_COLLECTION};
 
     /**
      * @class nosqlite
@@ -35,6 +35,8 @@ namespace nosqlite {
         json active_json;
 
         void clear_all();
+
+        bool valid_condition(condition_type condition);
 
     public:
 
@@ -78,6 +80,13 @@ namespace nosqlite {
          * @return Returns self.
          */
         nosqlite_api* read(std::string col_name, condition_type condition = empty_condition);
+
+        /**
+         * @param condition The operation will be conditioned according to this value.
+         * @brief Adds a condition to the operation that is being build.
+         * @return Returns self.
+         */
+        nosqlite_api* AND(condition_type condition);
 
     };
 

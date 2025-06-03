@@ -107,6 +107,15 @@ void database::create_hash_index(const std::string &col_name, const std::vector<
     col->create_hash_index(field);
 }
 
-int database::create_document(std::string col_name, json document) {
+int database::create_document(const std::string &col_name, json &document) {
     return this->get_collection(col_name)->create_document(document);
 }
+
+std::vector<json> database::read(const std::string &col_name, const std::vector<condition_type> &conditions) {
+    if (conditions.empty()) {
+        // TODO: Read all documents.
+        return {};
+    }
+    else return this->get_collection(col_name)->read_with_conditions(conditions);
+}
+

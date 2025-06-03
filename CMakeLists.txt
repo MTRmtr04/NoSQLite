@@ -15,7 +15,9 @@ add_executable(${PROJECT_NAME}
             src/collection.hpp
             src/collection.cpp
             src/hash_index.hpp
-            src/hash_index.cpp)
+            src/hash_index.cpp
+            src/nosqlite.hpp
+            src/nosqlite.cpp)
 
 # --- OpenMP Configuration ---
 find_package(OpenMP REQUIRED) # Find OpenMP on the system

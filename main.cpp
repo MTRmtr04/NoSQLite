@@ -5,6 +5,7 @@
 #include "src/auxiliary.hpp"
 #include "src/database.hpp"
 #include "src/collection.hpp"
+#include "src/nosqlite.hpp"
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -33,11 +34,12 @@ int main() {
     // cout << t[f][f2] << endl;
     // cout << access_nested_fields(t, {"imdb", "rating"}) << endl;
 
+
     database db("db");
     collection* col = db.get_collection("movies");
     // db.create_hash_index("movies", {"year"});
-/*
-    std::vector<std::tuple<std::vector<std::string>, std::string, json>> conditions = {
+
+    std::vector<condition_type> conditions = {
         {{"year"}, ">", 2008},
         {{"year"}, "<", 2010},
         {{"imdb", "rating"}, ">", 6},
@@ -52,9 +54,22 @@ int main() {
     auto duration = duration_cast<microseconds>(stop - start);
 
     cout << "first " << duration.count() << endl;
-    
 
+    nosqlite_api api("db");
+    result = {};
 
+    api.read("movies", {{"year"}, ">", 2008})->AND({{"year"}, "<", 2010})->AND({{"imdb", "rating"}, ">", 6})->AND({{"tomatoes","critic", "rating"}, ">", 7})->execute(result);
+    cout << result.size() << endl;
+
+    result = {};
+    api.read("movies", {{"year"}, ">", 2008});
+    api.AND({{"year"}, "<", 2010});
+    api.AND({{"imdb", "rating"}, ">", 6});
+    api.AND({{"tomatoes","critic", "rating"}, ">", 7});
+    api.execute(result);
+    cout << result.size() << endl;
+
+/*
     // READ
    
 
@@ -72,7 +87,7 @@ int main() {
             i++;
         }
     }
-    */
+    
 
     // DELETE 
     int initial_count = col->get_number_of_documents();
@@ -108,7 +123,7 @@ int main() {
 
     cout << "Test movie still exists: " << (exists ? "YES" : "NO -> SUCCESS") << endl;
     cout << "Final count: " << col->get_number_of_documents() << endl;
-
+*/
 
     return 0;
 }

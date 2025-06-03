@@ -16,7 +16,7 @@ namespace nosqlite {
     typedef std::vector<std::string> field_type;
 
 
-    typedef struct {
+    struct condition_type {
         field_type field;
         std::string op;
         json value;
@@ -30,7 +30,7 @@ namespace nosqlite {
             return !(cond.field == this->field && cond.op == this->op && cond.value == this->value);
         }
 
-    } condition_type;
+    };
 
     static condition_type empty_condition = {{}, "", {}};
 
