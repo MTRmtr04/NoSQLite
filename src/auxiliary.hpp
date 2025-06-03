@@ -12,6 +12,17 @@ using json = nlohmann::json;
 
 
 namespace nosqlite {
+
+    typedef std::vector<std::string> field_type;
+
+
+    typedef struct {
+        field_type field;
+        std::string op;
+        json value;
+    } condition_type;
+
+
     /**
      * @param path File path with to a directory without trailing /.
      * @brief Extracts the last directory in a file path.
@@ -100,13 +111,13 @@ namespace nosqlite {
      * @brief Access the json content inside the nested field that is the last element of the fields vector.
      * @return A JSON object with the content of the field should it exist and null otherwise. Should no fields be provided the original JSON is returned.
      */
-    json access_nested_fields(json content, std::vector<std::string> fields);
+    json access_nested_fields(json content, field_type fields);
 
     /**
      * @param fields List of fields
      * @brief Builds the name of the hash index
      */
-    std::string build_index_name(const std::vector<std::string> &fields);
+    std::string build_index_name(const field_type &fields);
 
     /**
      * @param value1 The first value.

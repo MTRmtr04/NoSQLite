@@ -101,7 +101,7 @@ namespace nosqlite {
         return object;   
     }
 
-    json access_nested_fields(json content, std::vector<std::string> fields) {
+    json access_nested_fields(json content, field_type fields) {
         json obj = content;
         for (const std::string &field : fields) {
             obj = obj[field];
@@ -109,7 +109,7 @@ namespace nosqlite {
         return obj;
     }
 
-    std::string build_index_name(const std::vector<std::string> &fields) {
+    std::string build_index_name(const field_type &fields) {
         std::string name = "hash";
 
         for (const std::string &field : fields) {

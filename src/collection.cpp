@@ -21,7 +21,6 @@ collection::collection(const std::string &path, const std::string &path_to_json)
 }
 
 collection::~collection() {
-    // TODO: Everything necessary.
     for (auto p : this->indexes) {
         delete p.second;
     }
@@ -226,7 +225,7 @@ int nosqlite::collection::create_document(const json &new_document) {
     return this->add_document(doc_copy, true);
 }
 
-std::vector<json> collection::read(const std::vector<std::string> &field, const json &value) const {
+std::vector<json> collection::read(const field_type &field, const json &value) const {
 
     if (field.size() == 0) return {};
 
@@ -318,11 +317,11 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
     return results;
 }
 
-std::vector<json> collection::read_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) const {
+std::vector<json> collection::read_with_conditions(const std::vector<condition_type> &conditions) const {
     std::vector<json> results;
     fs::path collection_path = this->path;
 
-    std::tuple<std::vector<std::string>, std::string, json> index_condition = {};
+    condition_type index_condition = {};
     std::string index_name = "";
     bool use_index = false;
     for(const auto &[field_path, op, target_value] : conditions){
@@ -345,7 +344,7 @@ std::vector<json> collection::read_with_conditions(const std::vector<std::tuple<
     int num_threads = 1;
 
     if (use_index) {
-        std::vector<std::string> paths = this->consult_hash_index(index_name, std::get<2>(index_condition));
+        std::vector<std::string> paths = this->consult_hash_index(index_name, index_condition.value);
 
         #pragma omp parallel
         {
@@ -442,7 +441,7 @@ std::vector<json> collection::read_with_conditions(const std::vector<std::tuple<
     return results;
 }
 
-void collection::create_hash_index(const std::vector<std::string> &field) {
+void collection::create_hash_index(const field_type &field) {
 
     if (field.size() == 0) return;
 
@@ -478,7 +477,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     bool updated = false;
     for(auto &doc : doc_array){
         if(doc.contains("id") && doc["id"] == id){
-            std::vector<std::string> fields;
+            field_type fields;
             for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
                 if(!doc.contains(it.key()) || doc[it.key()].is_null()){
                     fields.push_back(it.key());
@@ -540,7 +539,7 @@ json collection::get_document(unsigned long long id) const {
     return json();
 }
 
-int collection::delete_single(const fs::path &file_path, const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) {
+int collection::delete_single(const fs::path &file_path, const std::vector<condition_type> &conditions) {
     int docs_removed = 0;
     json file_content = read_and_parse_json(file_path);
     json remaining_docs = json::array();
@@ -589,23 +588,16 @@ int collection::delete_single(const fs::path &file_path, const std::vector<std::
     return docs_removed;
 }
 
-int collection::delete_document(const std::string &field, const json &value) {
-    std::vector<std::string> fields;
-    std::stringstream ss(field);
-    std::string segment;
-    while (std::getline(ss, segment, '.')){
-        fields.push_back(segment);
-    } 
-
-    return delete_with_conditions({{fields, "==", value}});
+int collection::delete_document(const field_type &field, const json &value) {
+    return delete_with_conditions({{field, "==", value}});
 }
 
-int collection::delete_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) {
+int collection::delete_with_conditions(const std::vector<condition_type> &conditions) {
     int docs_removed = 0;
     fs::path collection_path = this->path;
     bool modified = false;
 
-    std::tuple<std::vector<std::string>, std::string, json> index_condition = {};
+    condition_type index_condition = {};
     std::string index_name = "";
     bool use_index = false;
     for(const auto &[field_path, op, target_value] : conditions){
@@ -623,7 +615,7 @@ int collection::delete_with_conditions(const std::vector<std::tuple<std::vector<
     // Uses parallel processing to speed up the query.
     // The docs_removed variable is shared among the threads.
     if (use_index) {
-        std::vector<std::string> paths = consult_hash_index(index_name, std::get<2>(index_condition));
+        std::vector<std::string> paths = consult_hash_index(index_name, index_condition.value);
 
         #pragma omp parallel for reduction(+ : docs_removed)
         for (int i = 0; i < paths.size(); i++) {
@@ -635,7 +627,7 @@ int collection::delete_with_conditions(const std::vector<std::tuple<std::vector<
     } else {
         std::vector<fs::path> file_paths = {};
         collect_paths(collection_path, file_paths);
-        
+
         #pragma omp parallel for reduction(+ : docs_removed)
         for (int i = 0; i < file_paths.size(); i++) {
             fs::path file_path = file_paths[i];

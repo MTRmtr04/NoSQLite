@@ -11,7 +11,7 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 
-hash_index::hash_index(const std::string &path, const std::vector<std::string> &fields) : path(path) {
+hash_index::hash_index(const std::string &path, const field_type &fields) : path(path) {
     this->build_index(fields);
 }
 
@@ -25,7 +25,7 @@ std::string hash_index::get_field() {
     return get_last_dir(this->path);
 }
 
-void hash_index::build_index(const std::vector<std::string> &fields) {
+void hash_index::build_index(const field_type &fields) {
 
     // Delete everything from the directory where the index will be stored if it exists, else create it.
     fs::path path_to_index(this->path);

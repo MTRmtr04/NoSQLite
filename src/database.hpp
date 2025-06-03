@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include "collection.hpp"
+#include "auxiliary.hpp"
 
 
 /**
@@ -84,7 +85,7 @@ namespace nosqlite {
          * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
          * @brief Create an index on the collection and field in the parameters.
          */
-        void create_hash_index(const std::string &col_name, const std::vector<std::string> &field);
+        void create_hash_index(const std::string &col_name, const field_type &field);
        
     };
 } // namespace nosqlite

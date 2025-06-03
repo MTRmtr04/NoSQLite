@@ -6,6 +6,7 @@
 
 #include <string>
 #include <json.hpp>
+#include "auxiliary.hpp"
 using json = nlohmann::json;
 
 
@@ -26,7 +27,7 @@ namespace nosqlite {
          * @param fields List of nested fields. Only the last one will be indexed.
          * @brief Builds the hash index.
          */
-        void build_index(const std::vector<std::string> &fields);
+        void build_index(const field_type &fields);
 
     public:
 
@@ -41,7 +42,7 @@ namespace nosqlite {
          * @param fields List of nested fields. Only the last one will be indexed.
          * @brief Constructor for the hash_index class.
          */
-        hash_index(const std::string &path, const std::vector<std::string> &fields);
+        hash_index(const std::string &path, const field_type &fields);
 
         /**
          * @brief Getter for the path attribute.

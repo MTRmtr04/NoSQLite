@@ -91,9 +91,10 @@ int main() {
     auto start = high_resolution_clock::now();
 
     // Delete the movie created
-    int deleted = col->delete_with_conditions({
-        {{"imdb", "rating"}, "<", 1.0}
-    });
+    // int deleted = col->delete_with_conditions({
+    //     {{"imdb", "rating"}, "<", 1.0}
+    // });
+    int deleted = col->delete_document({"imdb", "rating"}, 0.5);
     cout << "Deleted " << deleted << " movie" << endl;
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);

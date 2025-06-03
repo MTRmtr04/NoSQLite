@@ -65,7 +65,7 @@ namespace nosqlite {
          */
         int add_document(json &json_object, bool update_header);
 
-        int delete_single(const fs::path &file_path, const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions);
+        int delete_single(const fs::path &file_path, const std::vector<condition_type> &conditions);
 
     public:
 
@@ -121,19 +121,19 @@ namespace nosqlite {
          * @brief Searches for a document in the collection with the given field and value.
          * @return Returns a vector of JSON objects that match the search.
          */
-        std::vector<json> read(const std::vector<std::string> &field, const json &value) const;
+        std::vector<json> read(const field_type &field, const json &value) const;
 
-        std::vector<json> read_with_conditions(
-            const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions) const;
+        std::vector<json> read_with_conditions(const std::vector<condition_type> &conditions) const;
 
         int update_document(unsigned long long id, const json& updated_data);
+        
         json get_document(unsigned long long id) const;
 
         /**
          * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
          * @brief Creates a hash index on the field parameter.
          */
-        void create_hash_index(const std::vector<std::string> &field);
+        void create_hash_index(const field_type &field);
 
         /**
          * @param index_name Name of the index.
@@ -148,14 +148,14 @@ namespace nosqlite {
           * @brief Deletes all documents in the collection where the specified field matches the given value.
           * @return Returns the number of documents deleted or -1 if an error occurred.
         */
-         int delete_document(const std::string &field, const json &value);
+         int delete_document(const field_type &field, const json &value);
         
         /**
          * @param conditions Vector of tuples with (field_path, operator, value)
          * @brief Deletes all documents that satisfy all conditions
          * @return Number of documents deleted or -1 if an error occurred
          */
-        int delete_with_conditions(const std::vector<std::tuple<std::vector<std::string>, std::string, json>> &conditions);
+        int delete_with_conditions(const std::vector<condition_type> &conditions);
 
      };
  } // namespace nosqlite
