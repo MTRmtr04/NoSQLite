@@ -20,8 +20,19 @@ namespace nosqlite {
         field_type field;
         std::string op;
         json value;
+
+
+        bool operator==(condition_type cond) {
+            return cond.field == this->field && cond.op == this->op && cond.value == this->value;
+        }
+
+        bool operator!=(condition_type cond) {
+            return !(cond.field == this->field && cond.op == this->op && cond.value == this->value);
+        }
+
     } condition_type;
 
+    static condition_type empty_condition = {{}, "", {}};
 
     /**
      * @param path File path with to a directory without trailing /.

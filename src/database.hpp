@@ -86,6 +86,14 @@ namespace nosqlite {
          * @brief Create an index on the collection and field in the parameters.
          */
         void create_hash_index(const std::string &col_name, const field_type &field);
+
+        /**
+         * @param col_name Name of the collection.
+         * @param document Json of the document.
+         * @brief Creates a document in the specified collection.
+         * @return Returns 0 if the JSON document was successfully created and 1 otherwise.
+         */
+        int create_document(std::string col_name, json document);
        
     };
 } // namespace nosqlite

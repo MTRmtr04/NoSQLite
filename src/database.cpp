@@ -107,3 +107,6 @@ void database::create_hash_index(const std::string &col_name, const std::vector<
     col->create_hash_index(field);
 }
 
+int database::create_document(std::string col_name, json document) {
+    return this->get_collection(col_name)->create_document(document);
+}
