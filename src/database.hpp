@@ -102,6 +102,12 @@ namespace nosqlite {
          * @return Returns a vector with the results.
          */
         std::vector<json> read(const std::string &col_name, const std::vector<condition_type> &conditions = {});
+
+        /**
+         * @param col_name Name of the collection.
+         * @brief Deletes a collection from the database.
+         */
+        void delete_collection(const std::string &col_name);
        
     };
 } // namespace nosqlite

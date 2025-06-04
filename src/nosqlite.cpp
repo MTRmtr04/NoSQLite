@@ -55,25 +55,25 @@ int nosqlite_api::execute(std::vector<json> &results) {
         case CREATE_INDEX: {
             break;
         }
+        case DELETE_COLLECTION: {
+            this->db->delete_collection(this->active_collection);
+            ret = 0;
+            break;
+        }
         default: {
             std::cerr << "No query to execute" << std::endl;
         }
     }
 
-    this->active_collection = "";
-    this->active_field = {};
-    this->active_json = {};
-    this->active_query_type = NONE;
-    this->conditions = {};
+    this->clear_all();
 
     return ret;
 }
 
-nosqlite_api* nosqlite_api::create(std::string col_name, json document) {
+void nosqlite_api::create(std::string col_name, json document) {
     this->active_query_type = CREATE;
     this->active_collection = col_name;
     this->active_json = document;
-    return this;
 }
 
 nosqlite_api* nosqlite_api::read(std::string col_name, condition_type condition ) {
@@ -91,5 +91,10 @@ nosqlite_api* nosqlite_api::AND(condition_type condition) {
 bool nosqlite_api::valid_condition(condition_type condition) {
     if (condition == empty_condition) return false;
     return condition.op == "==" || condition.op == "!=" || condition.op == ">" || condition.op == "<" || condition.op == ">=" || condition.op == "<=";
+}
+
+void nosqlite_api::delete_collection(const std::string &col_name) {
+    this->active_query_type = DELETE_COLLECTION;
+    this->active_collection = col_name;
 }
 

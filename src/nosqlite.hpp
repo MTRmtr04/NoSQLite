@@ -71,7 +71,7 @@ namespace nosqlite {
          * @brief Sets up the creation of a document in the specified collection with the specified JSON.
          * @return Returns self.
          */
-        nosqlite_api* create(std::string col_name, json document);
+        void create(std::string col_name, json document);
 
         /**
          * @param col_name Name of the collection.
@@ -87,6 +87,13 @@ namespace nosqlite {
          * @return Returns self.
          */
         nosqlite_api* AND(condition_type condition);
+
+        /**
+         * @param col_name Name of the collection.
+         * @brief Delete a collection from the database.
+         */
+        void delete_collection(const std::string &col_name);
+
 
     };
 

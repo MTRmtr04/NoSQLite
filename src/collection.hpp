@@ -123,10 +123,24 @@ namespace nosqlite {
          */
         std::vector<json> read(const field_type &field, const json &value) const;
 
+        /**
+         * @param conditions List of conditions that condition the read operation.
+         * @brief Gets all the documents in the collection that satisfy all of the conditions.
+         */
         std::vector<json> read_with_conditions(const std::vector<condition_type> &conditions) const;
 
+        /**
+         * @param id Id of the document to
+         * @param updated_data New data for the document.
+         * @brief Updated the entire document with the specified id.
+         */
         int update_document(unsigned long long id, const json& updated_data);
         
+        /**
+         * @param id Id of the document to get.
+         * @brief Gets a document by id.
+         * @returns JSON of the document with the specified id.
+         */
         json get_document(unsigned long long id) const;
 
         /**
@@ -156,6 +170,11 @@ namespace nosqlite {
          * @return Number of documents deleted or -1 if an error occurred
          */
         int delete_with_conditions(const std::vector<condition_type> &conditions);
+
+        /**
+         * @brief Deletes the entire collection from the database.
+         */
+        void delete_collection();
 
      };
  } // namespace nosqlite

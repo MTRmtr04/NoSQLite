@@ -655,3 +655,7 @@ int collection::delete_with_conditions(const std::vector<condition_type> &condit
     return docs_removed;
 }
 
+void collection::delete_collection() {
+    fs::remove_all(fs::path(this->path));
+}
+

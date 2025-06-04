@@ -119,3 +119,9 @@ std::vector<json> database::read(const std::string &col_name, const std::vector<
     else return this->get_collection(col_name)->read_with_conditions(conditions);
 }
 
+void database::delete_collection(const std::string &col_name) {
+    collection *col = this->get_collection(col_name);
+    col->delete_collection();
+    this->collections.erase(col_name);
+    delete col;
+}
