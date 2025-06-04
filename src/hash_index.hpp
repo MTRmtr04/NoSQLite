@@ -60,6 +60,11 @@ namespace nosqlite {
          * @brief Consults the index to get the paths to the documents with the coresponding hash.
          */
         std::vector<std::string> consult(const json &value);
+
+        /**
+         * @brief Deletes this index.
+         */
+        void delete_index();
     
     };
 

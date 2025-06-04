@@ -485,7 +485,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     fs::path path_to_doc = directory / idHash.substr(4).append(".json");
 
     if(!fs::exists(path_to_doc)){
-        std::cerr << "Error: Document with ID " << id << "does not exist." << std::endl;
+        std::cerr << "Error: Document with ID \"" << id << "\" does not exist." << std::endl;
         return 1;
     }
 
@@ -530,7 +530,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
             return 1;
         }
     } else {
-        std::cerr << "Error: Document with ID " << id << " not found in file." << std::endl;
+        std::cerr << "Error: Document with ID \"" << id << "\" not found in file." << std::endl;
         return 1;
     }
 }
@@ -540,7 +540,7 @@ json collection::get_document(unsigned long long id) const {
     fs::path path_to_doc = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2) / idHash.substr(4).append(".json");
 
     if (!fs::exists(path_to_doc)) {
-        std::cerr << "Error: Document with ID " << id << " does not exist." << std::endl;
+        std::cerr << "Error: Document with ID \"" << id << "\" does not exist." << std::endl;
         return json();
     }
 
@@ -551,7 +551,7 @@ json collection::get_document(unsigned long long id) const {
         }
     }
 
-    std::cerr << "Error: Document with ID " << id << " not found inside file." << std::endl;
+    std::cerr << "Error: Document with ID \"" << id << "\" not found inside file." << std::endl;
     return json();
 }
 
@@ -675,3 +675,22 @@ void collection::delete_collection() {
     fs::remove_all(fs::path(this->path));
 }
 
+bool collection::find_index(const field_type &field) {
+    return this->indexes.find(build_index_name(field)) != this->indexes.end();
+}
+
+int collection::delete_hash_index(const field_type &field) {
+    std::string index_name = build_index_name(field);
+    if (!this->find_index(field)) {
+        std::cerr << "Error: The index with name \"" << index_name << "\" does not exist." << std::endl;
+        return 1;
+    }
+    hash_index* index = this->indexes[index_name];
+    index->delete_index();
+    delete index;
+    this->indexes.erase(index_name);
+
+    // TODO: Update header.
+    
+    return 0;
+}

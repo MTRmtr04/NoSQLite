@@ -6,6 +6,7 @@
 #include "src/database.hpp"
 #include "src/collection.hpp"
 #include "src/nosqlite.hpp"
+#include <unistd.h>
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -34,7 +35,7 @@ int main() {
     // cout << t[f][f2] << endl;
     // cout << access_nested_fields(t, {"imdb", "rating"}) << endl;
 
-
+/*
     database db("db");
     collection* col = db.get_collection("movies");
     // db.create_hash_index("movies", {"year"});
@@ -54,20 +55,13 @@ int main() {
     auto duration = duration_cast<microseconds>(stop - start);
 
     cout << "first " << duration.count() << endl;
-
+*/
     nosqlite_api api("db");
-    result = {};
+    vector<json> result = {};
 
-    api.read("movies", {{"year"}, ">", 2008})->AND({{"year"}, "<", 2010})->AND({{"imdb", "rating"}, ">", 6})->AND({{"tomatoes","critic", "rating"}, ">", 7})->execute(result);
-    cout << result.size() << endl;
-
-    result = {};
-    api.read("movies", {{"year"}, ">", 2008});
-    api.AND({{"year"}, "<", 2010});
-    api.AND({{"imdb", "rating"}, ">", 6});
-    api.AND({{"tomatoes","critic", "rating"}, ">", 7});
-    api.execute(result);
-    cout << result.size() << endl;
+    api.create_collection("a")->execute(result);
+    sleep(2);
+    api.delete_collection("a")->execute(result);
 
 /*
     // READ

@@ -176,6 +176,19 @@ namespace nosqlite {
          */
         void delete_collection();
 
+        /**
+         * @param field Field of the index to find.
+         * @brief Checks if and index on the collection on the specified field exists.
+         */
+        bool find_index(const field_type &field);
+
+        /**
+         * @param Field of the index to delete.
+         * @brief Delete the hash index on the specified field.
+         * @return 0 on success and 1 otherwise.
+         */
+        int delete_hash_index(const field_type &field);
+
      };
  } // namespace nosqlite
  

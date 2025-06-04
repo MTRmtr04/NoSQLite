@@ -101,7 +101,7 @@ void database::set_collection(const std::string &colletion_name, collection* col
     this->collections[colletion_name] = col;
 }
 
-void database::create_hash_index(const std::string &col_name, const std::vector<std::string> &field) {
+void database::create_hash_index(const std::string &col_name, const field_type &field) {
     collection *col = this->get_collection(col_name);
 
     col->create_hash_index(field);
@@ -119,24 +119,70 @@ std::vector<json> database::read(const std::string &col_name, const std::vector<
     else return this->get_collection(col_name)->read_with_conditions(conditions);
 }
 
-void database::delete_collection(const std::string &col_name) {
+int database::delete_collection(const std::string &col_name) {
+    if (this->collections.find(col_name) == this->collections.end()) {
+        std::cerr << "Error: Collection with name \"" << col_name << "\" does not exist." << std::endl;
+        return 1;
+    }
     collection *col = this->get_collection(col_name);
     col->delete_collection();
     this->collections.erase(col_name);
     delete col;
-    // TODO: Change header file
+
+    json header = read_and_parse_json(fs::path(this->path) / col_name);
+    json cols = header["collections"];
+    for (auto itr = cols.begin(); itr != cols.end(); itr++) {
+        if (to_string(*itr) == col_name) {
+            cols.erase(itr);
+            break;
+        }
+    }
+    header["collections"] = cols;
+
+    fs::path header_path = fs::path(this->path) / "header.json";
+    std::ofstream header_file(header_path);
+    if (header_file.is_open()) {
+        header_file << header << std::endl;
+        header_file.close();
+    }
+    else {
+        throw_failed_to_update_header("");
+        return;
+    }
+    return 0;
 }
 
-int database::create_collection(const std::string &col_name, const std::string &path_to_files = "") {
+int database::create_collection(const std::string &col_name, const std::string &path_to_files) {
     if (this->collections.find(col_name) == this->collections.end()) {
-        std::cerr << "Error: Collection with name " << col_name << " already exists." << std::endl;
+        std::cerr << "Error: Collection with name \"" << col_name << "\" already exists." << std::endl;
         return 1;
     }
 
     collection* col = new collection(this->path + "/" + col_name, path_to_files);
     this->collections[col_name] = col;
-    // TODO: Change header file
+    
+    json header = read_and_parse_json(fs::path(this->path) / col_name);    
+    header["collections"].push_back(col_name);
+
+    fs::path header_path = fs::path(this->path) / "header.json";
+    std::ofstream header_file(header_path);
+    if (header_file.is_open()) {
+        header_file << header << std::endl;
+        header_file.close();
+    }
+    else {
+        throw_failed_to_update_header("");
+        return;
+    }
 
     return 0;
 }
 
+int database::delete_hash_index(const std::string &col_name, const field_type &field) {
+    if (this->collections.find(col_name) == this->collections.end()) {
+        std::cerr << "Error: Collection with name \"" << col_name << "\" does not exist." << std::endl;
+        return 1;
+    }
+
+    return this->get_collection(col_name)->delete_hash_index(field);
+}

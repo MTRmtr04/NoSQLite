@@ -108,4 +108,6 @@ std::vector<std::string> hash_index::consult(const json &value) {
     return documents;
 }
 
-
+void hash_index::delete_index() {
+    fs::remove_all(this->get_path());
+}

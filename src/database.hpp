@@ -106,8 +106,9 @@ namespace nosqlite {
         /**
          * @param col_name Name of the collection.
          * @brief Deletes a collection from the database.
+         * @return 0 on success and 1 otherwise 
          */
-        void delete_collection(const std::string &col_name);
+        int delete_collection(const std::string &col_name);
 
         /**
          * @param col_name Name of the collection.
@@ -116,6 +117,15 @@ namespace nosqlite {
          * @return 0 on success and 1 otherwise.
          */
         int create_collection(const std::string &col_name, const std::string &path_to_files = "");
+
+        /**
+         * @param col_name Name of the collection.
+         * @param field Indexed field for the index to be deleted.
+         * @brief Delete the the index from the specified collection on the specified field.
+         * @return 0 on success and 1 otherwise
+         */
+        int delete_hash_index(const std::string &col_name, const field_type &field);
+    
        
     };
 } // namespace nosqlite
