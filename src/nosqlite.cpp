@@ -60,6 +60,10 @@ int nosqlite_api::execute(std::vector<json> &results) {
             ret = 0;
             break;
         }
+        case CREATE_COLLECTION: {
+            ret = this->db->create_collection(this->active_collection, this->active_path);
+            break;
+        }
         default: {
             std::cerr << "No query to execute" << std::endl;
         }
@@ -70,10 +74,11 @@ int nosqlite_api::execute(std::vector<json> &results) {
     return ret;
 }
 
-void nosqlite_api::create(std::string col_name, json document) {
+nosqlite_api* nosqlite_api::create(std::string col_name, json document) {
     this->active_query_type = CREATE;
     this->active_collection = col_name;
     this->active_json = document;
+    return this;
 }
 
 nosqlite_api* nosqlite_api::read(std::string col_name, condition_type condition ) {
@@ -93,8 +98,18 @@ bool nosqlite_api::valid_condition(condition_type condition) {
     return condition.op == "==" || condition.op == "!=" || condition.op == ">" || condition.op == "<" || condition.op == ">=" || condition.op == "<=";
 }
 
-void nosqlite_api::delete_collection(const std::string &col_name) {
+nosqlite_api* nosqlite_api::delete_collection(const std::string &col_name) {
     this->active_query_type = DELETE_COLLECTION;
     this->active_collection = col_name;
+    return this;
 }
+
+nosqlite_api* nosqlite_api::create_collection(const std::string &col_name, const std::string &path_to_json) {
+    this->active_query_type = CREATE_COLLECTION;
+    this->active_collection = col_name;
+    this->active_path = path_to_json;
+
+    return this;
+}
+
 

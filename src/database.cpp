@@ -124,4 +124,19 @@ void database::delete_collection(const std::string &col_name) {
     col->delete_collection();
     this->collections.erase(col_name);
     delete col;
+    // TODO: Change header file
 }
+
+int database::create_collection(const std::string &col_name, const std::string &path_to_files = "") {
+    if (this->collections.find(col_name) == this->collections.end()) {
+        std::cerr << "Error: Collection with name " << col_name << " already exists." << std::endl;
+        return 1;
+    }
+
+    collection* col = new collection(this->path + "/" + col_name, path_to_files);
+    this->collections[col_name] = col;
+    // TODO: Change header file
+
+    return 0;
+}
+

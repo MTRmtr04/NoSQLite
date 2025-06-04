@@ -33,6 +33,7 @@ namespace nosqlite {
         field_type active_field;
         query_type active_query_type;
         json active_json;
+        std::string active_path;
 
         void clear_all();
 
@@ -71,7 +72,7 @@ namespace nosqlite {
          * @brief Sets up the creation of a document in the specified collection with the specified JSON.
          * @return Returns self.
          */
-        void create(std::string col_name, json document);
+        nosqlite_api* create(std::string col_name, json document);
 
         /**
          * @param col_name Name of the collection.
@@ -90,10 +91,16 @@ namespace nosqlite {
 
         /**
          * @param col_name Name of the collection.
-         * @brief Delete a collection from the database.
+         * @brief Sets up the deletion of a collection from the database.
          */
-        void delete_collection(const std::string &col_name);
+        nosqlite_api* delete_collection(const std::string &col_name);
 
+        /**
+         * @param col_name Name of the collection.
+         * @param path_to_json Path to the JSON files for the new collection.
+         * @brief Sets up the creation of a new collection in the database from the JSON files at the specified path or an empty collection if the path is a empty string.
+         */
+        nosqlite_api* create_collection(const std::string &col_name, const std::string &path_to_json);
 
     };
 

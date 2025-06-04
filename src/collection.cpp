@@ -27,6 +27,23 @@ collection::~collection() {
 }
 
 void collection::build_from_scratch(const std::string &path_to_json) {
+
+    if (path_to_json == "") {
+        fs::path header_path = fs::path(this->path) / "header.json";
+        std::ofstream header(header_path);
+        if (header.is_open()) {
+            json json_header;
+            json_header["number_of_documents"] = this->number_of_documents;
+            header << json_header << std::endl;
+            header.close();
+        }
+        else {
+            throw_failed_to_create_header(this->get_name());
+            return;
+            // TODO: Roll back changes if header creation fails. Maybe
+        }
+        return;
+    }
     
     // Checks if the directory with the json files to create the database with exists.
     if (int ret = check_path_existence(path_to_json) != 0) return;
@@ -86,10 +103,9 @@ void collection::build_from_scratch(const std::string &path_to_json) {
     else {
         throw_failed_to_create_header(this->get_name());
         return;
-        // TODO: Roll back changes if header creation fails. CHECK WITH PROF
+        // TODO: Roll back changes if header creation fails. Maybe
     }
 
-    // TODO: Build collection's indices.
 }
 
 void collection::build_from_existing() {

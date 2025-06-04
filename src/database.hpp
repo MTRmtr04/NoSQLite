@@ -108,6 +108,14 @@ namespace nosqlite {
          * @brief Deletes a collection from the database.
          */
         void delete_collection(const std::string &col_name);
+
+        /**
+         * @param col_name Name of the collection.
+         * @param path_to_files Path to JSON files for the new collection.
+         * @brief Creates from the files in the path_to_files or an empty collection if the path is an empty string.
+         * @return 0 on success and 1 otherwise.
+         */
+        int create_collection(const std::string &col_name, const std::string &path_to_files = "");
        
     };
 } // namespace nosqlite
