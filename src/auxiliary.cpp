@@ -101,7 +101,7 @@ namespace nosqlite {
         return object;
     }
 
-    json access_nested_fields(json content, std::vector<std::string> fields) {
+    json access_nested_fields(json content, field_type fields) {
         json obj = content;
         for (const std::string &field : fields) {
             obj = obj[field];
@@ -109,7 +109,7 @@ namespace nosqlite {
         return obj;
     }
 
-    std::string build_index_name(const std::vector<std::string> &fields) {
+    std::string build_index_name(const field_type &fields) {
         std::string name = "hash";
 
         for (const std::string &field : fields) {
@@ -117,6 +117,38 @@ namespace nosqlite {
         }
  
         return name;
+    }
+    
+    bool compare(const json &value1, const std::string &op, const json &value2) {
+        if (value1.is_array()) {
+            for (const auto &val : value1) {
+                if (compare(val, op, value2)) return true;
+            }
+            return false;
+        }
+
+        if (op == "==") return value1 == value2;
+        if (op == "!=") return value1 != value2;
+        if (op == ">")  return value1.is_number() && value2.is_number() && value1 > value2;
+        if (op == "<")  return value1.is_number() && value2.is_number() && value1 < value2;
+        if (op == ">=") return value1.is_number() && value2.is_number() && value1 >= value2;
+        if (op == "<=") return value1.is_number() && value2.is_number() && value1 <= value2;
+    
+        return false;
+    }
+
+    void pool_results(const std::vector<std::vector<json>> &all_results, std::vector<json> &results) {
+
+        for (const std::vector<json> &res : all_results) {
+            results.insert(results.end(), std::make_move_iterator(res.begin()), std::make_move_iterator(res.end()));
+        }
+    }
+
+    void collect_paths(const std::string &collection_path, std::vector<fs::path> &paths) {
+        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
+            if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json") continue; 
+            paths.push_back(file_path);
+        }
     }
 
 

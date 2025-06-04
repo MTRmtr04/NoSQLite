@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include "collection.hpp"
+#include "auxiliary.hpp"
 
 
 /**
@@ -84,7 +85,23 @@ namespace nosqlite {
          * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
          * @brief Create an index on the collection and field in the parameters.
          */
-        void create_hash_index(const std::string &col_name, const std::vector<std::string> &field);
+        void create_hash_index(const std::string &col_name, const field_type &field);
+
+        /**
+         * @param col_name Name of the collection.
+         * @param document JSON of the document.
+         * @brief Creates a document in the specified collection.
+         * @return Returns 0 if the JSON document was successfully created and 1 otherwise.
+         */
+        int create_document(const std::string &col_name, json &document);
+
+        /**
+         * @param col_name Name of the collection.
+         * @param conditions These values impose conditions on the documents that are read.
+         * @brief Reads from the database and returns the documents according to the conditions.
+         * @return Returns a vector with the results.
+         */
+        std::vector<json> read(const std::string &col_name, const std::vector<condition_type> &conditions = {});
        
     };
 } // namespace nosqlite

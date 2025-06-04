@@ -1,9 +1,11 @@
 #include "collection.hpp"
 #include "auxiliary.hpp"
+#include <functional>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
+#include <omp.h>
 
 using namespace nosqlite;
 using json = nlohmann::json;
@@ -19,7 +21,6 @@ collection::collection(const std::string &path, const std::string &path_to_json)
 }
 
 collection::~collection() {
-    // TODO: Everything necessary.
     for (auto p : this->indexes) {
         delete p.second;
     }
@@ -224,7 +225,7 @@ int nosqlite::collection::create_document(const json &new_document) {
     return this->add_document(doc_copy, true);
 }
 
-std::vector<json> collection::read(const std::vector<std::string> &field, const json &value) const {
+std::vector<json> collection::read(const field_type &field, const json &value) const {
 
     if (field.size() == 0) return {};
 
@@ -233,36 +234,214 @@ std::vector<json> collection::read(const std::vector<std::string> &field, const 
 
     std::string index_name = build_index_name(field);
 
+
+    // Uses parallel processing to speed up the query.
+    // Each thread has its own vector with results for the documents it collects.
+    // Each thread's result vector gets added to the all_thread_results vector.
+    // At the end of the parallel proccessing section all of the result in all_thread_results are pooled into the same vector and returned.
+    std::vector<std::vector<json>> all_thread_results;
+    int num_threads = 1;
+
+    // Check if there is an index for the target field.
     if (this->indexes.find(index_name) != this->indexes.end()) {
-
+        // Uses the index to perform the query.
         std::vector<std::string> paths = this->consult_hash_index(index_name, value);
-        for (const std::string &path : paths) {
 
-            json documents = read_and_parse_json(fs::path(path));
-            for (const json &document : documents)
-                if (access_nested_fields(document, field) == value) results.push_back(document);
+        #pragma omp parallel
+        {
+            std::vector<json> thread_results;
 
+            #pragma omp single
+            {
+                num_threads = omp_get_num_threads();
+                all_thread_results.resize(num_threads);
+            }
+
+            #pragma omp barrier
+
+            int thread_num = omp_get_thread_num();
+
+            #pragma omp for
+            for (int i = 0; i < paths.size(); i++) {
+                const std::string &path = paths[i];
+
+                json documents = read_and_parse_json(fs::path(path));
+                for (const json &document : documents)
+                    if (access_nested_fields(document, field) == value) thread_results.push_back(document);
+            }
+
+            all_thread_results[thread_num] = std::move(thread_results);
         }
 
+        pool_results(all_thread_results, results);
+        
     } else {
-        for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
-            if (file_path.extension() != ".json" || file_path.filename() == "header.json" || file_path.filename() == "index.json"){
-                continue;
-            } 
+        // No index was found. Iterate through all the documents in the database.
+        std::vector<fs::path> file_paths = {};
+        collect_paths(collection_path, file_paths);
 
-            json file_content = read_and_parse_json(file_path);
-            for (const json &doc : file_content) {
-                json nested_value = access_nested_fields(doc, field);
-                if (nested_value == value) {
-                    results.push_back(doc);
+        #pragma omp parallel
+        {
+            std::vector<json> thread_results;
+
+            #pragma omp single
+            {
+                num_threads = omp_get_num_threads();
+                all_thread_results.resize(num_threads);
+            }
+
+            #pragma omp barrier
+
+            int thread_num = omp_get_thread_num();
+
+            #pragma omp for
+            for (int i = 0; i < file_paths.size(); i++) {
+                const fs::path &file_path = file_paths[i];
+
+                json file_content = read_and_parse_json(file_path);
+                
+                for (const json &doc : file_content) {
+                    json nested_value = access_nested_fields(doc, field);
+                    if (nested_value == value) {
+                        thread_results.push_back(doc);
+                    }
                 }
             }
+
+            all_thread_results[thread_num] = std::move(thread_results);
         }
+
+        pool_results(all_thread_results, results);
+    }
+
+    return results;
+}
+
+std::vector<json> collection::read_with_conditions(const std::vector<condition_type> &conditions) const {
+    std::vector<json> results;
+    fs::path collection_path = this->path;
+
+    condition_type index_condition = {};
+    std::string index_name = "";
+    bool use_index = false;
+    for(const auto &[field_path, op, target_value] : conditions){
+        if (op == "==") {
+            index_name = build_index_name(field_path);
+            
+            if (this->indexes.find(index_name) != this->indexes.end()) {
+                index_condition = {field_path, op, target_value};
+                use_index = true;
+                break;
+            }
+        }
+    }
+
+    // Uses parallel processing to speed up the query.
+    // Each thread has its own vector with results for the documents it collects.
+    // Each thread's result vector gets added to the all_thread_results vector.
+    // At the end of the parallel proccessing section all of the result in all_thread_results are pooled into the same vector and returned.
+    std::vector<std::vector<json>> all_thread_results;
+    int num_threads = 1;
+
+    if (use_index) {
+        std::vector<std::string> paths = this->consult_hash_index(index_name, index_condition.value);
+
+        #pragma omp parallel
+        {
+            std::vector<json> thread_results;
+
+            #pragma omp single
+            {
+                num_threads = omp_get_num_threads();
+                all_thread_results.resize(num_threads);
+            }
+
+            #pragma omp barrier
+
+            int thread_num = omp_get_thread_num();
+
+            #pragma omp for
+            for (int i = 0; i < paths.size(); i++) {
+                const std::string &path = paths[i];
+
+                json documents = read_and_parse_json(fs::path(path));
+                for (const json &document : documents) {
+                    bool satisfies_all = true;
+                    for (const auto &[field_path, op, target_value] : conditions) {
+                        try{
+                            json actual_value = access_nested_fields(document, field_path);
+                            if(!compare(actual_value, op, target_value)){
+                                satisfies_all = false;
+                                break;
+                            }
+                        } catch(...){
+                            satisfies_all = false;
+                            break;
+                        }
+                    }
+
+                    if(satisfies_all){
+                        thread_results.push_back(document);
+                    }
+                }
+            }
+            all_thread_results[thread_num] = std::move(thread_results);
+        }
+        pool_results(all_thread_results, results);
+
+    } else {
+
+        std::vector<fs::path> file_paths = {};
+        collect_paths(collection_path, file_paths);
+
+        #pragma omp parallel
+        {
+            std::vector<json> thread_results;
+
+            #pragma omp single
+            {
+                num_threads = omp_get_num_threads();
+                all_thread_results.resize(num_threads);
+            }
+
+            #pragma omp barrier
+
+            int thread_num = omp_get_thread_num();
+
+            #pragma omp for
+            for (int i = 0; i < file_paths.size(); i++) {
+                const fs::path &file_path = file_paths[i];
+                
+                json file_content = read_and_parse_json(file_path);
+                for(const json &doc : file_content){
+                    bool satisfies_all = true;
+
+                    for(const auto &[field_path, op, target_value] : conditions){
+                        try{
+                            json actual_value = access_nested_fields(doc, field_path);
+                            if(!compare(actual_value, op, target_value)){
+                                satisfies_all = false;
+                                break;
+                            }
+                        } catch(...){
+                            satisfies_all = false;
+                            break;
+                        }
+                    }
+
+                    if(satisfies_all){
+                        thread_results.push_back(doc);
+                    }
+                }
+            }
+            all_thread_results[thread_num] = std::move(thread_results);
+        }
+        pool_results(all_thread_results, results);
     }
     return results;
 }
 
-void collection::create_hash_index(const std::vector<std::string> &field) {
+void collection::create_hash_index(const field_type &field) {
 
     if (field.size() == 0) return;
 
@@ -283,7 +462,6 @@ std::vector<std::string> collection::consult_hash_index(const std::string &index
     return index->consult(value);
 }
 
-
 //Update the entire object
 int collection::update_document(unsigned long long id, const json& updated_data){
     std::string idHash = hash_integer(id);
@@ -300,9 +478,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     bool updated = false;
     for(auto &doc : doc_array){
         if(doc.contains("id") && doc["id"] == id){
-            original = doc;
-
-            std::vector<std::string> fields;
+            field_type fields;
             for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
                 if(!doc.contains(it.key()) || doc[it.key()].is_null()){
                     fields.push_back(it.key());
@@ -371,53 +547,99 @@ json collection::get_document(unsigned long long id) const {
     return json();
 }
 
-int collection::delete_document(const std::string &field, const json &value) {
+int collection::delete_single(const fs::path &file_path, const std::vector<condition_type> &conditions) {
     int docs_removed = 0;
-    fs::path collection_path = this->path;
+    json file_content = read_and_parse_json(file_path);
+    json remaining_docs = json::array();
+    bool file_modified = false;
 
-    std::vector<std::string> fields;
-    std::stringstream ss(field);
-    std::string current_segment;
-    while (std::getline(ss, current_segment, '.')) {
-        fields.push_back(current_segment);
-    }
+    for (const auto &doc : file_content) {
+        bool satisfies_all = true;
 
-    for (const fs::path &file_path : fs::recursive_directory_iterator(collection_path)) {
-        if (file_path.extension() != ".json" || file_path.filename() == "header.json"){
-            continue;
-        } 
-
-        json file_content = read_and_parse_json(file_path);
-        json remaining_docs = json::array();
-
-        for (const auto &doc : file_content) {
+        for (const auto &[field_path, op, target_value] : conditions) {
             try {
-                json nested_value = access_nested_fields(doc, fields);
-                if (nested_value == value) {
-                    docs_removed++;
-                } else {
-                    remaining_docs.push_back(doc);
+                json actual_value = access_nested_fields(doc, field_path);
+                if (!compare(actual_value, op, target_value)) {
+                    satisfies_all = false;
+                    break;
                 }
-            } catch (const json::exception& e) {
-                // Handle the case where the field does not exist
-                remaining_docs.push_back(doc);
+            } catch (...) {
+                satisfies_all = false;
+                break;
             }
         }
 
-        // If documents were removed update the file
-        if (docs_removed > 0) {
-            if (remaining_docs.empty()) {
-                fs::remove(file_path);
+        if (satisfies_all) {
+            docs_removed++;
+            file_modified = true;
+        } else {
+            remaining_docs.push_back(doc);
+        }
+    }
+
+    // If documents were removed update the file
+    if (file_modified) {
+        if (remaining_docs.empty()) {
+            fs::remove(file_path);
+        } else {
+            std::ofstream file(file_path);
+            if (file.is_open()) {
+                file << remaining_docs << std::endl;
+                file.close();
             } else {
-                std::ofstream file(file_path);
-                if (file.is_open()) {
-                    file << remaining_docs << std::endl;
-                    file.close();
-                } else {
-                    throw_failed_to_open_file(file_path);
-                    return -1;
-                }
+                throw_failed_to_open_file(file_path);
+                return -1;
             }
+        }
+    }
+
+    return docs_removed;
+}
+
+int collection::delete_document(const field_type &field, const json &value) {
+    return delete_with_conditions({{field, "==", value}});
+}
+
+int collection::delete_with_conditions(const std::vector<condition_type> &conditions) {
+    int docs_removed = 0;
+    fs::path collection_path = this->path;
+    bool modified = false;
+
+    condition_type index_condition = {};
+    std::string index_name = "";
+    bool use_index = false;
+    for(const auto &[field_path, op, target_value] : conditions){
+        if (op == "==") {
+            index_name = build_index_name(field_path);
+        
+            if (this->indexes.find(index_name) != this->indexes.end()) {
+                index_condition = {field_path, op, target_value};
+                use_index = true;
+                break;
+            }
+        }
+    }
+
+    // Uses parallel processing to speed up the query.
+    // The docs_removed variable is shared among the threads.
+    if (use_index) {
+        std::vector<std::string> paths = consult_hash_index(index_name, index_condition.value);
+
+        #pragma omp parallel for reduction(+ : docs_removed)
+        for (int i = 0; i < paths.size(); i++) {
+            const std::string &path = paths[i];
+
+            docs_removed += delete_single(fs::path(path), conditions);
+        }
+
+    } else {
+        std::vector<fs::path> file_paths = {};
+        collect_paths(collection_path, file_paths);
+
+        #pragma omp parallel for reduction(+ : docs_removed)
+        for (int i = 0; i < file_paths.size(); i++) {
+            fs::path file_path = file_paths[i];
+            docs_removed += delete_single(file_path, conditions);
         }
     }
 
@@ -440,3 +662,4 @@ int collection::delete_document(const std::string &field, const json &value) {
 
     return docs_removed;
 }
+

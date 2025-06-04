@@ -12,6 +12,28 @@ using json = nlohmann::json;
 
 
 namespace nosqlite {
+
+    typedef std::vector<std::string> field_type;
+
+
+    struct condition_type {
+        field_type field;
+        std::string op;
+        json value;
+
+
+        bool operator==(condition_type cond) {
+            return cond.field == this->field && cond.op == this->op && cond.value == this->value;
+        }
+
+        bool operator!=(condition_type cond) {
+            return !(cond.field == this->field && cond.op == this->op && cond.value == this->value);
+        }
+
+    };
+
+    static condition_type empty_condition = {{}, "", {}};
+
     /**
      * @param path File path with to a directory without trailing /.
      * @brief Extracts the last directory in a file path.
@@ -100,13 +122,37 @@ namespace nosqlite {
      * @brief Access the json content inside the nested field that is the last element of the fields vector.
      * @return A JSON object with the content of the field should it exist and null otherwise. Should no fields be provided the original JSON is returned.
      */
-    json access_nested_fields(json content, std::vector<std::string> fields);
+    json access_nested_fields(json content, field_type fields);
 
     /**
      * @param fields List of fields
      * @brief Builds the name of the hash index
      */
-    std::string build_index_name(const std::vector<std::string> &fields);
+    std::string build_index_name(const field_type &fields);
+
+    /**
+     * @param value1 The first value.
+     * @param op The operation
+     * @param value2 The second value.
+     * @brief Compares the too values according to the operation.
+     * @return The boolean result of the comparison.
+     */
+    bool compare(const json &value1, const std::string &op, const json &value2);
+
+    /**
+     * @param all_results Vector of vectors with the results.
+     * @param results Destination of the pooled results.
+     * @brief Pools all of the values in each of the vector of all_results and returns them in a single vector by reference.
+     */
+    void pool_results(const std::vector<std::vector<json>> &all_results, std::vector<json> &results);
+
+    /**
+     * @param collection_path Path to the directory.
+     * @param paths Vector where the paths will be collected.
+     * @brief Collects all of the paths to database files in the directory collection_path.
+     */
+    void collect_paths(const std::string &collection_path, std::vector<fs::path> &paths);
+
 }
 
 #endif
