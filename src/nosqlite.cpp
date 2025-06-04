@@ -13,11 +13,19 @@ using json = nlohmann::json;
 
 nosqlite_api::nosqlite_api(const std::string &path) {
     this->db = new database(path);
+    if (this->db->build_from_existing() != 0) {
+        delete this->db;
+        exit(1);
+    }
     this->clear_all();
 }
 
 nosqlite_api::nosqlite_api(const std::string &path_to_database, const std::string &path_to_json) {
-    this->db = new database(path_to_database, path_to_json);
+    this->db = new database(path_to_database);
+    if (this->db->build_from_scratch(path_to_json) != 0) {
+        delete this->db;
+        exit(1);
+    }
     this->clear_all();
 }
 

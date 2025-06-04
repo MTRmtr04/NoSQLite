@@ -10,13 +10,7 @@ using namespace nosqlite;
 namespace fs = std::filesystem;
 
     
-database::database(const std::string &path) : path(path) {
-    this->build_from_existing();
-}
-
-database::database(const std::string &path_to_database, const std::string &path_to_json) : path(path_to_database) {
-    this->build_from_scratch(path_to_json);
-}
+database::database(const std::string &path) : path(path) {}
 
 database::~database() {
     for (auto p : this->collections) {
@@ -24,10 +18,10 @@ database::~database() {
     }
 }
 
-void database::build_from_scratch(const std::string &path_to_json) {
+int database::build_from_scratch(const std::string &path_to_json) {
 
     // Checks if the directory with the json files to create the database with exists.
-    if (int ret = check_path_existence(path_to_json) != 0) return;
+    if (int ret = check_path_existence(path_to_json) != 0) return 1;
 
     // Delete everything from the directory where the database will be stored if it exists, else create it.
     fs::path path_to_database = this->path;
@@ -46,9 +40,12 @@ void database::build_from_scratch(const std::string &path_to_json) {
 
         fs::path collection_path = fs::path(this->path) / collection_name;
 
-        collection* col = new collection(collection_path.string(), (entry.parent_path() / collection_name).string());
-
-        this->collections[collection_name] = col;
+        collection* col = new collection(collection_path.string());
+        if (col->build_from_scratch((entry.parent_path() / collection_name).string()) != 0) {
+            std::cerr << "Error: Failed to create collection: \"" << collection_name << "\"" << std::endl;
+            delete col;
+        }
+        else this->collections[collection_name] = col;
     }
     std::sort(collection_names.begin(), collection_names.end());
 
@@ -64,24 +61,46 @@ void database::build_from_scratch(const std::string &path_to_json) {
     }
     else {
         throw_failed_to_create_header("");
-        return;
+        return 1;
     }
+
+    return 0;
 }
 
-void database::build_from_existing() {
+int database::build_from_existing() {
     // Checks if the database exists.
-    if (int ret = check_path_existence(this->path) != 0) return;
+    if (int ret = check_path_existence(this->path) != 0) return 1;
 
     // Read the header file.
     fs::path header = fs::path(this->path) / "header.json";
     json header_json = read_and_parse_json(header);
     std::vector<std::string> collection_names = header_json["collections"];
 
+    std::vector<std::string> new_col_names = {};
     for (const std::string &collection_name : collection_names) {
         fs::path collection_path = fs::path(this->path) / collection_name;
         collection* col = new collection(collection_path.string());
-        this->set_collection(collection_name, col);
+        if (col->build_from_existing() != 0) {
+            std::cerr << "Error: Failed to build collection: \"" << collection_name << "\"" << std::endl;
+            delete col;
+        }
+        else {
+            this->set_collection(collection_name, col);
+            new_col_names.push_back(collection_name);
+        }
     }
+
+    std::ofstream header_file(header);
+    if (header_file.is_open()) {
+        json header_json;
+        header_json["collections"] = new_col_names;
+        header_file << header_json << std::endl;;
+    } else {
+        throw_failed_to_update_header("");
+        return 1;
+    }
+
+    return 0;
 }
 
 std::string database::get_path() const {
@@ -129,17 +148,17 @@ int database::delete_collection(const std::string &col_name) {
     this->collections.erase(col_name);
     delete col;
 
-    json header = read_and_parse_json(fs::path(this->path) / col_name);
-    json cols = header["collections"];
-    for (auto itr = cols.begin(); itr != cols.end(); itr++) {
-        if (to_string(*itr) == col_name) {
-            cols.erase(itr);
-            break;
-        }
-    }
-    header["collections"] = cols;
-
     fs::path header_path = fs::path(this->path) / "header.json";
+    json header = read_and_parse_json(header_path);
+    std::vector<std::string> cols;
+    header["collections"].get_to(cols);
+    std::vector<std::string> new_cols = {};
+    for (const std::string &col : cols) {
+        if (col == col_name) continue;
+        new_cols.push_back(col);
+    }
+    header["collections"] = new_cols;
+
     std::ofstream header_file(header_path);
     if (header_file.is_open()) {
         header_file << header << std::endl;
@@ -147,24 +166,29 @@ int database::delete_collection(const std::string &col_name) {
     }
     else {
         throw_failed_to_update_header("");
-        return;
+        return 1;
     }
     return 0;
 }
 
 int database::create_collection(const std::string &col_name, const std::string &path_to_files) {
-    if (this->collections.find(col_name) == this->collections.end()) {
+    if (this->collections.find(col_name) != this->collections.end()) {
         std::cerr << "Error: Collection with name \"" << col_name << "\" already exists." << std::endl;
         return 1;
     }
 
-    collection* col = new collection(this->path + "/" + col_name, path_to_files);
-    this->collections[col_name] = col;
-    
-    json header = read_and_parse_json(fs::path(this->path) / col_name);    
-    header["collections"].push_back(col_name);
+    collection* col = new collection(this->path + "/" + col_name);
+    if (col->build_from_scratch(path_to_files) != 0) {
+        std::cerr << "Error: Failed to build collection: \"" << col_name << "\"" << std::endl;
+        delete col;
+        return 1;
+    }
+    else this->collections[col_name] = col;
 
     fs::path header_path = fs::path(this->path) / "header.json";
+    json header = read_and_parse_json(header_path);   
+    header["collections"].push_back(col_name);
+
     std::ofstream header_file(header_path);
     if (header_file.is_open()) {
         header_file << header << std::endl;
@@ -172,7 +196,7 @@ int database::create_collection(const std::string &col_name, const std::string &
     }
     else {
         throw_failed_to_update_header("");
-        return;
+        return 1;
     }
 
     return 0;

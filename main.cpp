@@ -58,7 +58,6 @@ int main() {
 */
     nosqlite_api api("db");
     vector<json> result = {};
-
     api.create_collection("a")->execute(result);
     sleep(2);
     api.delete_collection("a")->execute(result);

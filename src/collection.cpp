@@ -12,13 +12,7 @@ using json = nlohmann::json;
 
 // TODO: Add index names to the header file so as to make creation at the start more efficient.
 
-collection::collection(const std::string &path) : path(path) {
-    this->build_from_existing();
-}
-
-collection::collection(const std::string &path, const std::string &path_to_json) : path(path), number_of_documents(0), indexes({}) {
-    this->build_from_scratch(path_to_json);
-}
+collection::collection(const std::string &path) : path(path), number_of_documents(0) {}
 
 collection::~collection() {
     for (auto p : this->indexes) {
@@ -26,7 +20,14 @@ collection::~collection() {
     }
 }
 
-void collection::build_from_scratch(const std::string &path_to_json) {
+int collection::build_from_scratch(const std::string &path_to_json) {
+
+    // Delete everything from the directory where the collection will be stored if it exists, else create it.
+    fs::path path_to_collection = this->path;
+    if (fs::exists(path_to_collection))
+        for (const fs::path &entry : fs::directory_iterator(path_to_collection))
+            fs::remove_all(entry);
+    else fs::create_directory(path_to_collection);
 
     if (path_to_json == "") {
         fs::path header_path = fs::path(this->path) / "header.json";
@@ -39,21 +40,14 @@ void collection::build_from_scratch(const std::string &path_to_json) {
         }
         else {
             throw_failed_to_create_header(this->get_name());
-            return;
-            // TODO: Roll back changes if header creation fails. Maybe
+            fs::remove_all(path_to_collection);
+            return 1;
         }
-        return;
+        return 0;
     }
     
     // Checks if the directory with the json files to create the database with exists.
-    if (int ret = check_path_existence(path_to_json) != 0) return;
-
-    // Delete everything from the directory where the collection will be stored if it exists, else create it.
-    fs::path path_to_collection = this->path;
-    if (fs::exists(path_to_collection))
-        for (const fs::path &entry : fs::directory_iterator(path_to_collection))
-            fs::remove_all(entry);
-    else fs::create_directory(path_to_collection);
+    if (int ret = check_path_existence(path_to_json) != 0) return 1;
 
     // Get all the file JSON paths in the path_to_json directory
     std::vector<fs::path> paths;
@@ -102,16 +96,16 @@ void collection::build_from_scratch(const std::string &path_to_json) {
     }
     else {
         throw_failed_to_create_header(this->get_name());
-        return;
-        // TODO: Roll back changes if header creation fails. Maybe
+        fs::remove_all(path_to_collection);
+        return 1;
     }
 
+    return 0;
 }
 
-void collection::build_from_existing() {
+int collection::build_from_existing() {
     // Checks if the collection exists.
-    if (int ret = check_path_existence(this->path) != 0) return;
-
+    if (check_path_existence(this->path) != 0) return 1;
     // Read the header file.
     fs::path header = fs::path(this->path) / "header.json";
     json header_json = read_and_parse_json(header);
@@ -126,6 +120,8 @@ void collection::build_from_existing() {
             }
         }
     }
+
+    return 0;
 }
 
 std::string collection::get_path() const {

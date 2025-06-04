@@ -32,17 +32,6 @@ namespace nosqlite {
         std::unordered_map<std::string, collection*> collections;
 
         /**
-        * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
-        * @brief Build a database from scratch using the json files in path_to_json. Will delete everyting in the path directory.
-        */
-        void build_from_scratch(const std::string &path_to_json);
-
-        /**
-         * @brief Builds the database instance from a database already in memory (must follow the NoSQLite specifications)
-         */
-        void build_from_existing();
-
-        /**
          * @param collection_name Name of the collection.
          * @param col Pointer to the collection.
          * @brief Sets the collection instance with the correct name.
@@ -57,16 +46,22 @@ namespace nosqlite {
         database(const std::string &path);
 
         /**
-         * @param path_to_database Path to the json file database to be created. Must be an empty directory.
-         * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
-         * @brief Constructor for the database class. Builds a database from scratch using the json files in path_to_json. 
-         */
-        database(const std::string &path_to_database, const std::string &path_to_json);
-
-        /**
          * @brief Destructor for the database class.
          */
         ~database();
+
+        /**
+        * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
+        * @brief Build a database from scratch using the json files in path_to_json. Will delete everyting in the path directory.
+        * @return 0 on success and 1 otherwise.
+        */
+        int build_from_scratch(const std::string &path_to_json);
+
+        /**
+         * @brief Builds the database instance from a database already in memory (must follow the NoSQLite specifications)
+         * @return 0 on success and 1 otherwise.
+         */
+        int build_from_existing();
 
         /**
          * @brief Getter for the path attribute.

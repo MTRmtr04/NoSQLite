@@ -48,7 +48,7 @@ namespace nosqlite {
     }
 
     void throw_failed_to_create_header(const std::string &collection_name) {
-        if (collection_name.empty())std::cerr << "Error: Failed to create database header file" << std::endl;
+        if (collection_name.empty()) std::cerr << "Error: Failed to create database header file" << std::endl;
         else std::cerr << "Error: Failed to create collection header file. Collection: \"" << collection_name << "\"." << std::endl;
     }
 
