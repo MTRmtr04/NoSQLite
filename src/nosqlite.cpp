@@ -65,6 +65,7 @@ int nosqlite_api::execute(std::vector<json> &results) {
             break;
         }
         case CREATE_INDEX: {
+            ret = this->db->create_hash_index(this->active_collection, this->active_field);
             break;
         }
         case DELETE_COLLECTION: {
@@ -125,6 +126,13 @@ nosqlite_api* nosqlite_api::create_collection(const std::string &col_name, const
 
 nosqlite_api* nosqlite_api::delete_index(const std::string &col_name, const field_type &field) {
     this->active_query_type = DELETE_INDEX;
+    this->active_collection = col_name;
+    this->active_field = field;
+    return this;
+}
+
+nosqlite_api* nosqlite_api::create_index(const std::string &col_name, const field_type &field) {
+    this->active_query_type = CREATE_INDEX;
     this->active_collection = col_name;
     this->active_field = field;
     return this;

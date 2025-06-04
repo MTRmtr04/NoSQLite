@@ -111,6 +111,14 @@ namespace nosqlite {
          * @return Returns self.
          */
         nosqlite_api* delete_index(const std::string &col_name, const field_type &field);
+        
+        /**
+         * @param col_name Name of the collection.
+         * @param field Field of the index to be created.
+         * @brief Sets up the creation of an index on the specified field and collection.
+         * @return Returns self.
+         */
+        nosqlite_api* create_index(const std::string &col_name, const field_type &field);
 
     };
 

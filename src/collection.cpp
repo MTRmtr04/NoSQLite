@@ -453,19 +453,27 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
     return results;
 }
 
-void collection::create_hash_index(const field_type &field) {
+int collection::create_hash_index(const field_type &field) {
 
-    if (field.size() == 0) return;
+    if (field.size() == 0) return 0;
 
     std::string name = build_index_name(field);
 
-    if (this->indexes.find(name) != this->indexes.end()) return;
+    if (this->indexes.find(name) != this->indexes.end()) {
+        std::cerr << "Index with name \"" << name << "\" already exists" << std::endl;
+        return 1;
+    }
 
     std::string path = this->path + "/indexes/" + name;
     
-    hash_index* index = new hash_index(path, field);
+    hash_index* index = new hash_index(path);
+    if (index->build_index(field) != 0) {
+        std::cerr << "Failed to create hash index: \"" << name << "\"" << std::endl;
+        return 1;
+    }
 
     this->indexes[name] = index;
+    return 0;
 }
 
 std::vector<std::string> collection::consult_hash_index(const std::string &index_name, const json &value) const {

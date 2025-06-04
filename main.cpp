@@ -17,50 +17,24 @@ using json = nlohmann::json;
 
 int main() {
 
-    // auto start = high_resolution_clock::now();
-
-    // auto stop = high_resolution_clock::now();
-    // auto duration = duration_cast<microseconds>(stop - start);
-
-    // cout << "first " << duration.count() << endl;
-
-    // string f = "imdb";
-    // string f2 = "rating";
-    // auto start = high_resolution_clock::now();
-    // json t = read_and_parse_json(fs::path("db/movies/eb/c5/99e5dd16b3e2.json"))[0];
-    // auto stop = high_resolution_clock::now();
-    // auto duration = duration_cast<microseconds>(stop - start);
-
-    // std::cout << "third " << duration.count() << std::endl;
-    // cout << t[f][f2] << endl;
-    // cout << access_nested_fields(t, {"imdb", "rating"}) << endl;
-
 /*
-    database db("db");
-    collection* col = db.get_collection("movies");
-    // db.create_hash_index("movies", {"year"});
-
     std::vector<condition_type> conditions = {
         {{"year"}, ">", 2008},
         {{"year"}, "<", 2010},
         {{"imdb", "rating"}, ">", 6},
         {{"tomatoes","critic", "rating"}, ">", 7}
     };
-    auto start = high_resolution_clock::now();
 
-    vector<json> result = col->read_with_conditions(conditions);
-    // vector<json> result = col->read({"year"}, 2008);
-    cout << result.size() << endl;
+    auto start = high_resolution_clock::now();
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-
     cout << "first " << duration.count() << endl;
 */
     nosqlite_api api("db");
     vector<json> result = {};
-    api.create_collection("a")->execute(result);
-    sleep(2);
-    api.delete_collection("a")->execute(result);
+    // api.create_index("movies", {"year"})->execute(result);
+    // sleep(5);
+    api.delete_index("movies", {"year"})->execute(result);
 
 /*
     // READ

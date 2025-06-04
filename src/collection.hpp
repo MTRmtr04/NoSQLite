@@ -142,7 +142,7 @@ namespace nosqlite {
          * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
          * @brief Creates a hash index on the field parameter.
          */
-        void create_hash_index(const field_type &field);
+        int create_hash_index(const field_type &field);
 
         /**
          * @param index_name Name of the index.
@@ -157,7 +157,7 @@ namespace nosqlite {
           * @brief Deletes all documents in the collection where the specified field matches the given value.
           * @return Returns the number of documents deleted or -1 if an error occurred.
         */
-         int delete_document(const field_type &field, const json &value);
+        int delete_document(const field_type &field, const json &value);
         
         /**
          * @param conditions Vector of tuples with (field_path, operator, value)
