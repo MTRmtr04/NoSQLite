@@ -498,7 +498,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     bool updated = false;
     for(auto &doc : doc_array){
         if(doc.contains("id") && doc["id"] == id){
-            original = doc;
+            original = json(doc);
             field_type fields;
             for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
                 if(!doc.contains(it.key()) || doc[it.key()].is_null()){
@@ -531,11 +531,10 @@ int collection::update_document(unsigned long long id, const json& updated_data)
         if(file.is_open()){
             file << doc_array.dump(4);
             file.close();
-            for (auto it = updated_data.begin(); it != updated_data.end(); ++it) {
-                std::string field = it.key();
-                std::string fields = build_index_name({field});
-                std::cout << fields << std::endl;
-                auto hsh_idx_it = this->indexes.find(fields);
+            std::vector<std::string> possible_indices = build_possible_index_names(updated_data);
+            for (const auto &index_name : possible_indices) {
+                std::cout << index_name << std::endl;
+                auto hsh_idx_it = this->indexes.find(index_name);
                 if (hsh_idx_it == this->indexes.end()) continue;
                 hsh_idx_it->second->update_index(original, final, path_to_doc.string());
             }

@@ -123,6 +123,13 @@ namespace nosqlite {
      * @return A JSON object with the content of the field should it exist and null otherwise. Should no fields be provided the original JSON is returned.
      */
     json access_nested_fields(json content, field_type fields);
+    
+    /**
+     * @param data JSON object with the data to build the index names from.
+     * @param prefix Prefix to be added to the index names.
+     * @brief Builds vector with all of the possible index names that can be built from the data.
+     */
+    std::vector<std::string> build_possible_index_names(const json &data, const std::string &prefix = "hash_");
 
     /**
      * @param fields List of fields

@@ -109,6 +109,21 @@ namespace nosqlite {
         return obj;
     }
 
+    std::vector<std::string> build_possible_index_names(const json &data, const std::string &prefix) {
+        std::vector<std::string> index_names;
+
+        for (auto it = data.begin(); it != data.end(); ++it) {
+            std::string field_name = prefix + it.key();
+            index_names.push_back(field_name);
+            if (it.value().is_object()) {
+                std::vector<std::string> nested_names = build_possible_index_names(it.value(), field_name + "_");
+                index_names.insert(index_names.end(), nested_names.begin(), nested_names.end());
+            }
+        }
+
+        return index_names;
+    }
+
     std::string build_index_name(const field_type &fields) {
         std::string name = "hash";
 
