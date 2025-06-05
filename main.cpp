@@ -6,6 +6,7 @@
 #include "src/database.hpp"
 #include "src/collection.hpp"
 #include "src/nosqlite.hpp"
+#include <unistd.h>
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -16,58 +17,27 @@ using json = nlohmann::json;
 
 int main() {
 
-    // auto start = high_resolution_clock::now();
-
-    // auto stop = high_resolution_clock::now();
-    // auto duration = duration_cast<microseconds>(stop - start);
-
-    // cout << "first " << duration.count() << endl;
-
-    // string f = "imdb";
-    // string f2 = "rating";
-    // auto start = high_resolution_clock::now();
-    // json t = read_and_parse_json(fs::path("db/movies/eb/c5/99e5dd16b3e2.json"))[0];
-    // auto stop = high_resolution_clock::now();
-    // auto duration = duration_cast<microseconds>(stop - start);
-
-    // std::cout << "third " << duration.count() << std::endl;
-    // cout << t[f][f2] << endl;
-    // cout << access_nested_fields(t, {"imdb", "rating"}) << endl;
-
-
-    database db("db");
-    collection* col = db.get_collection("movies");
-    // db.create_hash_index("movies", {"year"});
-
+/*
     std::vector<condition_type> conditions = {
         {{"year"}, ">", 2008},
         {{"year"}, "<", 2010},
         {{"imdb", "rating"}, ">", 6},
         {{"tomatoes","critic", "rating"}, ">", 7}
     };
-    auto start = high_resolution_clock::now();
 
-    vector<json> result = col->read_with_conditions(conditions);
-    // vector<json> result = col->read({"year"}, 2008);
-    cout << result.size() << endl;
+    auto start = high_resolution_clock::now();
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-
     cout << "first " << duration.count() << endl;
-
-    nosqlite_api api("db");
-    result = {};
-
-    api.read("movies", {{"year"}, ">", 2008})->AND({{"year"}, "<", 2010})->AND({{"imdb", "rating"}, ">", 6})->AND({{"tomatoes","critic", "rating"}, ">", 7})->execute(result);
-    cout << result.size() << endl;
-
-    result = {};
-    api.read("movies", {{"year"}, ">", 2008});
-    api.AND({{"year"}, "<", 2010});
-    api.AND({{"imdb", "rating"}, ">", 6});
-    api.AND({{"tomatoes","critic", "rating"}, ">", 7});
-    api.execute(result);
-    cout << result.size() << endl;
+*/
+    // nosqlite_api api("db");
+    // vector<json> result = {};
+    // // api.create_index("movies", {"year"})->execute(result);
+    // // sleep(5);
+    // api.delete_index("movies", {"year"})->execute(result);
+    database db("db");
+    db.build_from_existing();
+    collection* col = db.get_collection("movies");
 
 /*
     // READ
@@ -131,6 +101,11 @@ int main() {
     json update_fields = {
         {"year", 2024},
         // {"director", "New Director Name"}
+        {"imdb", {
+            {"id", 7558},
+            {"rating", 5.9},
+            {"votes", 247}
+        }}
     };
 
     int result = col->update_document(id, update_fields);

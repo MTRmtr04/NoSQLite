@@ -13,11 +13,19 @@ using json = nlohmann::json;
 
 nosqlite_api::nosqlite_api(const std::string &path) {
     this->db = new database(path);
+    if (this->db->build_from_existing() != 0) {
+        delete this->db;
+        exit(1);
+    }
     this->clear_all();
 }
 
 nosqlite_api::nosqlite_api(const std::string &path_to_database, const std::string &path_to_json) {
-    this->db = new database(path_to_database, path_to_json);
+    this->db = new database(path_to_database);
+    if (this->db->build_from_scratch(path_to_json) != 0) {
+        delete this->db;
+        exit(1);
+    }
     this->clear_all();
 }
 
@@ -52,7 +60,20 @@ int nosqlite_api::execute(std::vector<json> &results) {
         case DELETE: {
             break;
         }
+        case DELETE_INDEX: {
+            ret = this->db->delete_hash_index(this->active_collection, this->active_field);
+            break;
+        }
         case CREATE_INDEX: {
+            ret = this->db->create_hash_index(this->active_collection, this->active_field);
+            break;
+        }
+        case DELETE_COLLECTION: {
+            ret = this->db->delete_collection(this->active_collection);
+            break;
+        }
+        case CREATE_COLLECTION: {
+            ret = this->db->create_collection(this->active_collection, this->active_path);
             break;
         }
         default: {
@@ -60,11 +81,7 @@ int nosqlite_api::execute(std::vector<json> &results) {
         }
     }
 
-    this->active_collection = "";
-    this->active_field = {};
-    this->active_json = {};
-    this->active_query_type = NONE;
-    this->conditions = {};
+    this->clear_all();
 
     return ret;
 }
@@ -93,3 +110,30 @@ bool nosqlite_api::valid_condition(condition_type condition) {
     return condition.op == "==" || condition.op == "!=" || condition.op == ">" || condition.op == "<" || condition.op == ">=" || condition.op == "<=";
 }
 
+nosqlite_api* nosqlite_api::delete_collection(const std::string &col_name) {
+    this->active_query_type = DELETE_COLLECTION;
+    this->active_collection = col_name;
+    return this;
+}
+
+nosqlite_api* nosqlite_api::create_collection(const std::string &col_name, const std::string &path_to_json) {
+    this->active_query_type = CREATE_COLLECTION;
+    this->active_collection = col_name;
+    this->active_path = path_to_json;
+
+    return this;
+}
+
+nosqlite_api* nosqlite_api::delete_index(const std::string &col_name, const field_type &field) {
+    this->active_query_type = DELETE_INDEX;
+    this->active_collection = col_name;
+    this->active_field = field;
+    return this;
+}
+
+nosqlite_api* nosqlite_api::create_index(const std::string &col_name, const field_type &field) {
+    this->active_query_type = CREATE_INDEX;
+    this->active_collection = col_name;
+    this->active_field = field;
+    return this;
+}

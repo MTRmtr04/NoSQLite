@@ -33,6 +33,7 @@ namespace nosqlite {
         field_type active_field;
         query_type active_query_type;
         json active_json;
+        std::string active_path;
 
         void clear_all();
 
@@ -87,6 +88,37 @@ namespace nosqlite {
          * @return Returns self.
          */
         nosqlite_api* AND(condition_type condition);
+
+        /**
+         * @param col_name Name of the collection.
+         * @brief Sets up the deletion of a collection from the database.
+         * @return Returns self.
+         */
+        nosqlite_api* delete_collection(const std::string &col_name);
+
+        /**
+         * @param col_name Name of the collection.
+         * @param path_to_json Path to the JSON files for the new collection.
+         * @brief Sets up the creation of a new collection in the database from the JSON files at the specified path or an empty collection if the path is a empty string.
+         * @return Returns self.
+         */
+        nosqlite_api* create_collection(const std::string &col_name, const std::string &path_to_json = "");
+
+        /**
+         * @param col_name Name of the collection.
+         * @param field Field of the index to be deleted.
+         * @brief Sets up the deletion of an index on the specified field and collection.
+         * @return Returns self.
+         */
+        nosqlite_api* delete_index(const std::string &col_name, const field_type &field);
+        
+        /**
+         * @param col_name Name of the collection.
+         * @param field Field of the index to be created.
+         * @brief Sets up the creation of an index on the specified field and collection.
+         * @return Returns self.
+         */
+        nosqlite_api* create_index(const std::string &col_name, const field_type &field);
 
     };
 

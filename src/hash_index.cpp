@@ -11,10 +11,6 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 
-hash_index::hash_index(const std::string &path, const field_type &fields) : path(path) {
-    this->build_index(fields);
-}
-
 hash_index::hash_index(const std::string path) : path(path) {}
 
 std::string hash_index::get_path() {
@@ -25,7 +21,7 @@ std::string hash_index::get_field() {
     return get_last_dir(this->path);
 }
 
-void hash_index::build_index(const field_type &fields) {
+int hash_index::build_index(const field_type &fields) {
 
     // Delete everything from the directory where the index will be stored if it exists, else create it.
     fs::path path_to_index(this->path);
@@ -45,10 +41,7 @@ void hash_index::build_index(const field_type &fields) {
 
     for (const fs::path &p : paths) {
         json documents = read_and_parse_json(p);
-        if (documents.empty()) {
-            // TODO: Error handling for failed paths/documents.
-            continue;
-        }
+        if (documents.empty()) continue;
 
         for (json document : documents) {
             json indexee = access_nested_fields(document, fields);
@@ -68,10 +61,15 @@ void hash_index::build_index(const field_type &fields) {
                 index[hash.substr(4)].push_back(p.string());
 
                 std::ofstream file(path_to_index_file);
-                if (file.is_open()) file << index;
-                else throw_failed_to_open_file(path_to_index_file);
-
-                file.close();
+                if (file.is_open()) {
+                    file << index;
+                    file.close();
+                }
+                else {
+                    throw_failed_to_open_file(path_to_index_file);
+                    fs::remove_all(path_to_index);
+                    return 1;
+                }
             }
             else {
                 std::ofstream file(path_to_index_file);
@@ -79,14 +77,18 @@ void hash_index::build_index(const field_type &fields) {
                     json index = {};
                     index[hash.substr(4)].push_back(p.string());
                     file << index;
+                    file.close();
                 }
-                else throw_failed_to_create_file(path_to_index_file);
-
-                file.close();
+                else {
+                    throw_failed_to_create_file(path_to_index_file);
+                    fs::remove_all(path_to_index);
+                    return 1;
+                }
             }
         }
-
     }
+
+    return 0;
 }
 
 std::vector<std::string> hash_index::consult(const json &value) {
@@ -154,4 +156,8 @@ void hash_index::update_index(json original_value, json updated_value, const std
 
         file.close();
     }
+}
+
+void hash_index::delete_index() {
+    fs::remove_all(this->get_path());
 }

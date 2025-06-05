@@ -23,12 +23,6 @@ namespace nosqlite {
          */
         std::string path;
 
-        /**
-         * @param fields List of nested fields. Only the last one will be indexed.
-         * @brief Builds the hash index.
-         */
-        void build_index(const field_type &fields);
-
     public:
 
         /**
@@ -38,11 +32,10 @@ namespace nosqlite {
         hash_index(const std::string path);
 
         /**
-         * @param path Path to the where the index will be created.
          * @param fields List of nested fields. Only the last one will be indexed.
-         * @brief Constructor for the hash_index class.
+         * @brief Builds the hash index.
          */
-        hash_index(const std::string &path, const field_type &fields);
+        int build_index(const field_type &fields);
 
         /**
          * @brief Getter for the path attribute.
@@ -60,6 +53,11 @@ namespace nosqlite {
          * @brief Consults the index to get the paths to the documents with the coresponding hash.
          */
         std::vector<std::string> consult(const json &value);
+
+        /**
+         * @brief Deletes this index.
+         */
+        void delete_index();
     
         /**
          * @param original_value Original indexed value.

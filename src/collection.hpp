@@ -41,17 +41,6 @@ namespace nosqlite {
         std::unordered_map<std::string, hash_index*> indexes;
 
         /**
-         * @param path_to_json Path to the directory with the files to build the collection.
-         * @brief Builds a collection from scratch according to the files in the path_to_json directory.
-         */
-        void build_from_scratch(const std::string &path_to_json);
-
-        /**
-         * @brief Builds a collection instance from an existing collection in memory.
-         */
-        void build_from_existing();
-
-        /**
          * @param json_content JSON document to add to the collection.
          * @param update_header Indicates whether the header file should be updated or not.
          * @brief Adds a new document to the collection, updates the indices and the header file (or not).
@@ -71,21 +60,27 @@ namespace nosqlite {
 
         /**
          * @param path Path and name of the collection
-         * @brief Constructor for the collection class. Uses a database (with the NoSQLite specifications) already in the file system to build the collection with the corresponding name.
+         * @brief Constructor for the collection class.
          */
         collection(const std::string &path);
-
-        /**
-         * @param path Path and name of the collection
-         * @param path_to_json Path to the directory with the files to build the collection.
-         * @brief Constructor for the collection class. Builds a collection from scratch according to the files in the path_to_json directory.
-         */
-        collection(const std::string &path, const std::string &path_to_json);
 
         /**
          * @brief Destructor for the collection class.
          */
         ~collection();
+        
+        /**
+         * @param path_to_json Path to the directory with the files to build the collection.
+         * @brief Builds a collection from scratch according to the files in the path_to_json directory.
+         * @return 0 on success and 1 otherwise.
+         */
+        int build_from_scratch(const std::string &path_to_json);
+
+        /**
+         * @brief Builds a collection instance from an existing collection in memory.  Uses a database (with the NoSQLite specifications) already in the file system to build the collection with the corresponding name.
+         * @return 0 on success and 1 otherwise.
+         */
+        int build_from_existing();
 
         /**
          * @brief Gets the path to the collection.
@@ -123,17 +118,31 @@ namespace nosqlite {
          */
         std::vector<json> read(const field_type &field, const json &value) const;
 
+        /**
+         * @param conditions List of conditions that condition the read operation.
+         * @brief Gets all the documents in the collection that satisfy all of the conditions.
+         */
         std::vector<json> read_with_conditions(const std::vector<condition_type> &conditions) const;
 
+        /**
+         * @param id Id of the document to
+         * @param updated_data New data for the document.
+         * @brief Updated the entire document with the specified id.
+         */
         int update_document(unsigned long long id, const json& updated_data);
         
+        /**
+         * @param id Id of the document to get.
+         * @brief Gets a document by id.
+         * @returns JSON of the document with the specified id.
+         */
         json get_document(unsigned long long id) const;
 
         /**
          * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
          * @brief Creates a hash index on the field parameter.
          */
-        void create_hash_index(const field_type &field);
+        int create_hash_index(const field_type &field);
 
         /**
          * @param index_name Name of the index.
@@ -148,7 +157,7 @@ namespace nosqlite {
           * @brief Deletes all documents in the collection where the specified field matches the given value.
           * @return Returns the number of documents deleted or -1 if an error occurred.
         */
-         int delete_document(const field_type &field, const json &value);
+        int delete_document(const field_type &field, const json &value);
         
         /**
          * @param conditions Vector of tuples with (field_path, operator, value)
@@ -156,6 +165,24 @@ namespace nosqlite {
          * @return Number of documents deleted or -1 if an error occurred
          */
         int delete_with_conditions(const std::vector<condition_type> &conditions);
+
+        /**
+         * @brief Deletes the entire collection from the database.
+         */
+        void delete_collection();
+
+        /**
+         * @param field Field of the index to find.
+         * @brief Checks if and index on the collection on the specified field exists.
+         */
+        bool find_index(const field_type &field);
+
+        /**
+         * @param Field of the index to delete.
+         * @brief Delete the hash index on the specified field.
+         * @return 0 on success and 1 otherwise.
+         */
+        int delete_hash_index(const field_type &field);
 
      };
  } // namespace nosqlite

@@ -12,13 +12,7 @@ using json = nlohmann::json;
 
 // TODO: Add index names to the header file so as to make creation at the start more efficient.
 
-collection::collection(const std::string &path) : path(path) {
-    this->build_from_existing();
-}
-
-collection::collection(const std::string &path, const std::string &path_to_json) : path(path), number_of_documents(0), indexes({}) {
-    this->build_from_scratch(path_to_json);
-}
+collection::collection(const std::string &path) : path(path), number_of_documents(0) {}
 
 collection::~collection() {
     for (auto p : this->indexes) {
@@ -26,10 +20,7 @@ collection::~collection() {
     }
 }
 
-void collection::build_from_scratch(const std::string &path_to_json) {
- 
-    // Checks if the directory with the json files to create the database with exists.
-    if (int ret = check_path_existence(path_to_json) != 0) return;
+int collection::build_from_scratch(const std::string &path_to_json) {
 
     // Delete everything from the directory where the collection will be stored if it exists, else create it.
     fs::path path_to_collection = this->path;
@@ -37,6 +28,26 @@ void collection::build_from_scratch(const std::string &path_to_json) {
         for (const fs::path &entry : fs::directory_iterator(path_to_collection))
             fs::remove_all(entry);
     else fs::create_directory(path_to_collection);
+
+    if (path_to_json == "") {
+        fs::path header_path = fs::path(this->path) / "header.json";
+        std::ofstream header(header_path);
+        if (header.is_open()) {
+            json json_header;
+            json_header["number_of_documents"] = this->number_of_documents;
+            header << json_header << std::endl;
+            header.close();
+        }
+        else {
+            throw_failed_to_create_header(this->get_name());
+            fs::remove_all(path_to_collection);
+            return 1;
+        }
+        return 0;
+    }
+    
+    // Checks if the directory with the json files to create the database with exists.
+    if (int ret = check_path_existence(path_to_json) != 0) return 1;
 
     // Get all the file JSON paths in the path_to_json directory
     std::vector<fs::path> paths;
@@ -85,17 +96,16 @@ void collection::build_from_scratch(const std::string &path_to_json) {
     }
     else {
         throw_failed_to_create_header(this->get_name());
-        return;
-        // TODO: Roll back changes if header creation fails. CHECK WITH PROF
+        fs::remove_all(path_to_collection);
+        return 1;
     }
 
-    // TODO: Build collection's indices.
+    return 0;
 }
 
-void collection::build_from_existing() {
+int collection::build_from_existing() {
     // Checks if the collection exists.
-    if (int ret = check_path_existence(this->path) != 0) return;
-
+    if (check_path_existence(this->path) != 0) return 1;
     // Read the header file.
     fs::path header = fs::path(this->path) / "header.json";
     json header_json = read_and_parse_json(header);
@@ -110,6 +120,8 @@ void collection::build_from_existing() {
             }
         }
     }
+
+    return 0;
 }
 
 std::string collection::get_path() const {
@@ -441,19 +453,27 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
     return results;
 }
 
-void collection::create_hash_index(const field_type &field) {
+int collection::create_hash_index(const field_type &field) {
 
-    if (field.size() == 0) return;
+    if (field.size() == 0) return 0;
 
     std::string name = build_index_name(field);
 
-    if (this->indexes.find(name) != this->indexes.end()) return;
+    if (this->indexes.find(name) != this->indexes.end()) {
+        std::cerr << "Index with name \"" << name << "\" already exists" << std::endl;
+        return 1;
+    }
 
     std::string path = this->path + "/indexes/" + name;
-
-    hash_index* index = new hash_index(path, field);
+    
+    hash_index* index = new hash_index(path);
+    if (index->build_index(field) != 0) {
+        std::cerr << "Failed to create hash index: \"" << name << "\"" << std::endl;
+        return 1;
+    }
 
     this->indexes[name] = index;
+    return 0;
 }
 
 std::vector<std::string> collection::consult_hash_index(const std::string &index_name, const json &value) const {
@@ -469,7 +489,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     fs::path path_to_doc = directory / idHash.substr(4).append(".json");
 
     if(!fs::exists(path_to_doc)){
-        std::cerr << "Error: Document with ID " << id << "does not exist." << std::endl;
+        std::cerr << "Error: Document with ID \"" << id << "\" does not exist." << std::endl;
         return 1;
     }
 
@@ -525,7 +545,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
             return 1;
         }
     } else {
-        std::cerr << "Error: Document with ID " << id << " not found in file." << std::endl;
+        std::cerr << "Error: Document with ID \"" << id << "\" not found in file." << std::endl;
         return 1;
     }
 }
@@ -535,7 +555,7 @@ json collection::get_document(unsigned long long id) const {
     fs::path path_to_doc = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2) / idHash.substr(4).append(".json");
 
     if (!fs::exists(path_to_doc)) {
-        std::cerr << "Error: Document with ID " << id << " does not exist." << std::endl;
+        std::cerr << "Error: Document with ID \"" << id << "\" does not exist." << std::endl;
         return json();
     }
 
@@ -546,7 +566,7 @@ json collection::get_document(unsigned long long id) const {
         }
     }
 
-    std::cerr << "Error: Document with ID " << id << " not found inside file." << std::endl;
+    std::cerr << "Error: Document with ID \"" << id << "\" not found inside file." << std::endl;
     return json();
 }
 
@@ -666,3 +686,26 @@ int collection::delete_with_conditions(const std::vector<condition_type> &condit
     return docs_removed;
 }
 
+void collection::delete_collection() {
+    fs::remove_all(fs::path(this->path));
+}
+
+bool collection::find_index(const field_type &field) {
+    return this->indexes.find(build_index_name(field)) != this->indexes.end();
+}
+
+int collection::delete_hash_index(const field_type &field) {
+    std::string index_name = build_index_name(field);
+    if (!this->find_index(field)) {
+        std::cerr << "Error: The index with name \"" << index_name << "\" does not exist." << std::endl;
+        return 1;
+    }
+    hash_index* index = this->indexes[index_name];
+    index->delete_index();
+    delete index;
+    this->indexes.erase(index_name);
+
+    // TODO: Update header.
+    
+    return 0;
+}

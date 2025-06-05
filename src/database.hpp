@@ -32,17 +32,6 @@ namespace nosqlite {
         std::unordered_map<std::string, collection*> collections;
 
         /**
-        * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
-        * @brief Build a database from scratch using the json files in path_to_json. Will delete everyting in the path directory.
-        */
-        void build_from_scratch(const std::string &path_to_json);
-
-        /**
-         * @brief Builds the database instance from a database already in memory (must follow the NoSQLite specifications)
-         */
-        void build_from_existing();
-
-        /**
          * @param collection_name Name of the collection.
          * @param col Pointer to the collection.
          * @brief Sets the collection instance with the correct name.
@@ -57,16 +46,22 @@ namespace nosqlite {
         database(const std::string &path);
 
         /**
-         * @param path_to_database Path to the json file database to be created. Must be an empty directory.
-         * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
-         * @brief Constructor for the database class. Builds a database from scratch using the json files in path_to_json. 
-         */
-        database(const std::string &path_to_database, const std::string &path_to_json);
-
-        /**
          * @brief Destructor for the database class.
          */
         ~database();
+
+        /**
+        * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
+        * @brief Build a database from scratch using the json files in path_to_json. Will delete everyting in the path directory.
+        * @return 0 on success and 1 otherwise.
+        */
+        int build_from_scratch(const std::string &path_to_json);
+
+        /**
+         * @brief Builds the database instance from a database already in memory (must follow the NoSQLite specifications)
+         * @return 0 on success and 1 otherwise.
+         */
+        int build_from_existing();
 
         /**
          * @brief Getter for the path attribute.
@@ -85,7 +80,7 @@ namespace nosqlite {
          * @param field Field to be indexed if length is one and list of nested fields where the last one is indexed otherwise.
          * @brief Create an index on the collection and field in the parameters.
          */
-        void create_hash_index(const std::string &col_name, const field_type &field);
+        int create_hash_index(const std::string &col_name, const field_type &field);
 
         /**
          * @param col_name Name of the collection.
@@ -102,6 +97,30 @@ namespace nosqlite {
          * @return Returns a vector with the results.
          */
         std::vector<json> read(const std::string &col_name, const std::vector<condition_type> &conditions = {});
+
+        /**
+         * @param col_name Name of the collection.
+         * @brief Deletes a collection from the database.
+         * @return 0 on success and 1 otherwise 
+         */
+        int delete_collection(const std::string &col_name);
+
+        /**
+         * @param col_name Name of the collection.
+         * @param path_to_files Path to JSON files for the new collection.
+         * @brief Creates from the files in the path_to_files or an empty collection if the path is an empty string.
+         * @return 0 on success and 1 otherwise.
+         */
+        int create_collection(const std::string &col_name, const std::string &path_to_files = "");
+
+        /**
+         * @param col_name Name of the collection.
+         * @param field Indexed field for the index to be deleted.
+         * @brief Delete the the index from the specified collection on the specified field.
+         * @return 0 on success and 1 otherwise
+         */
+        int delete_hash_index(const std::string &col_name, const field_type &field);
+    
        
     };
 } // namespace nosqlite

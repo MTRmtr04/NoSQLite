@@ -1,5 +1,2 @@
-*
+**
 !.gitignore
-!.empty
-bin/db/**
-!bin/
