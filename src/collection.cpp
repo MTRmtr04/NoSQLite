@@ -194,11 +194,12 @@ int collection::add_document(json &json_object, bool update_header) {
 
     // Once everything else is successful increment the number of documents.
     if (update_header) {
-        std::fstream header(fs::path(this->path) / "header.json");
+        std::ofstream header(fs::path(this->path) / "header.json");
         if (header.is_open()) {
-            json h;
-            header >> h;
+            json h = {};
             h["number_of_documents"] = this->number_of_documents + 1;
+            // header >> h;
+            // h["number_of_documents"] = this->number_of_documents + 1;
             header << h;
             header.close();
             this->number_of_documents++;
