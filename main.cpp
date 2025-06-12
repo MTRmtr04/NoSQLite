@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
                 {"title", "Memories of Murder"},
                 {"director", "Bong Joon Ho"},
                 {"year", 2003},
-                {"imdb", {"rating", 8.1}}
+                {"imdb", {{"rating", 8.1}}}
             })->execute(result);
             auto stop = high_resolution_clock::now();
             auto duration = duration_cast<milliseconds>(stop - start);
@@ -87,9 +87,7 @@ int main(int argc, char** argv) {
             // Update
             auto start = high_resolution_clock::now();
             api.update("movies", {
-                {"imdb", {
-                    {"rating", 9.5},
-                }}
+                {"runtime", 42},
             },{
                 {"year"}, "==", 2004
             })->AND({
