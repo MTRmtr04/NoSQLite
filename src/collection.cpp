@@ -274,13 +274,21 @@ std::vector<json> collection::read(const field_type &field, const json &value) c
 
             #pragma omp single
             {
-                num_threads = omp_get_num_threads();
+                #ifdef _OPENMP
+                    num_threads = omp_get_num_threads();
+                #else
+                    num_threads = 1;
+                #endif
                 all_thread_results.resize(num_threads);
             }
 
             #pragma omp barrier
 
-            int thread_num = omp_get_thread_num();
+            #ifdef _OPENMP
+                int thread_num = omp_get_thread_num();
+            #else
+                int thread_num = 0;
+            #endif
 
             #pragma omp for
             for (int i = 0; i < paths.size(); i++) {
@@ -307,13 +315,21 @@ std::vector<json> collection::read(const field_type &field, const json &value) c
 
             #pragma omp single
             {
-                num_threads = omp_get_num_threads();
+                #ifdef _OPENMP
+                    num_threads = omp_get_num_threads();
+                #else
+                    num_threads = 1;
+                #endif
                 all_thread_results.resize(num_threads);
             }
 
             #pragma omp barrier
 
-            int thread_num = omp_get_thread_num();
+            #ifdef _OPENMP
+                int thread_num = omp_get_thread_num();
+            #else
+                int thread_num = 0;
+            #endif
 
             #pragma omp for
             for (int i = 0; i < file_paths.size(); i++) {
@@ -358,13 +374,21 @@ std::vector<json> nosqlite::collection::read_all() const {
 
         #pragma omp single
         {
-            num_threads = omp_get_num_threads();
+            #ifdef _OPENMP
+                num_threads = omp_get_num_threads();
+            #else
+                num_threads = 1;
+            #endif
             all_thread_results.resize(num_threads);
         }
 
         #pragma omp barrier
 
-        int thread_num = omp_get_thread_num();
+        #ifdef _OPENMP
+            int thread_num = omp_get_thread_num();
+        #else
+            int thread_num = 0;
+        #endif
 
         #pragma omp for
         for (int i = 0; i < file_paths.size(); i++) {
@@ -419,13 +443,21 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
 
             #pragma omp single
             {
-                num_threads = omp_get_num_threads();
+                #ifdef _OPENMP
+                    num_threads = omp_get_num_threads();
+                #else
+                    num_threads = 1;
+                #endif
                 all_thread_results.resize(num_threads);
             }
 
             #pragma omp barrier
 
-            int thread_num = omp_get_thread_num();
+            #ifdef _OPENMP
+                int thread_num = omp_get_thread_num();
+            #else
+                int thread_num = 0;
+            #endif
 
             #pragma omp for
             for (int i = 0; i < paths.size(); i++) {
@@ -467,13 +499,21 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
 
             #pragma omp single
             {
-                num_threads = omp_get_num_threads();
+                #ifdef _OPENMP
+                    num_threads = omp_get_num_threads();
+                #else
+                    num_threads = 1;
+                #endif
                 all_thread_results.resize(num_threads);
             }
 
             #pragma omp barrier
 
-            int thread_num = omp_get_thread_num();
+            #ifdef _OPENMP
+                int thread_num = omp_get_thread_num();
+            #else
+                int thread_num = 0;
+            #endif
 
             #pragma omp for
             for (int i = 0; i < file_paths.size(); i++) {
