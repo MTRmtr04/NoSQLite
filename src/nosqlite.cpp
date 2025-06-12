@@ -33,6 +33,14 @@ nosqlite_api::~nosqlite_api() {
     delete this->db;
 }
 
+void nosqlite_api::turn_on_parallel_processing() {
+    this->db->turn_on_parallel_processing();
+}
+
+void nosqlite_api::turn_off_parallel_processing() {
+    this->db->turn_off_parallel_processing();
+}
+
 void nosqlite_api::clear_all() {
     this->active_collection = "";
     this->active_field = {};

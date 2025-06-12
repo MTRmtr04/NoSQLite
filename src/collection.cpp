@@ -12,12 +12,20 @@ using json = nlohmann::json;
 
 // TODO: Add index names to the header file so as to make creation at the start more efficient.
 
-collection::collection(const std::string &path) : path(path), number_of_documents(0) {}
+collection::collection(const std::string &path) : path(path), number_of_documents(0), parallel_processing(true) {}
 
 collection::~collection() {
     for (auto p : this->indexes) {
         delete p.second;
     }
+}
+
+void collection::turn_on_parallel_processing() {
+    this->parallel_processing = true;
+}
+
+void collection::turn_off_parallel_processing() {
+    this->parallel_processing = false;
 }
 
 int collection::build_from_scratch(const std::string &path_to_json) {
@@ -260,7 +268,7 @@ std::vector<json> collection::read(const field_type &field, const json &value) c
         // Uses the index to perform the query.
         std::vector<std::string> paths = this->consult_hash_index(index_name, value);
 
-        #pragma omp parallel
+        #pragma omp parallel if(this->parallel_processing)
         {
             std::vector<json> thread_results;
 
@@ -293,7 +301,7 @@ std::vector<json> collection::read(const field_type &field, const json &value) c
         std::vector<fs::path> file_paths = {};
         collect_paths(collection_path, file_paths);
 
-        #pragma omp parallel
+        #pragma omp parallel if(this->parallel_processing)
         {
             std::vector<json> thread_results;
 
@@ -344,7 +352,7 @@ std::vector<json> nosqlite::collection::read_all() const {
     std::vector<fs::path> file_paths = {};
     collect_paths(collection_path, file_paths);
 
-    #pragma omp parallel
+    #pragma omp parallel if(this->parallel_processing)
     {
         std::vector<json> thread_results;
 
@@ -405,7 +413,7 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
     if (use_index) {
         std::vector<std::string> paths = this->consult_hash_index(index_name, index_condition.value);
 
-        #pragma omp parallel
+        #pragma omp parallel if(this->parallel_processing)
         {
             std::vector<json> thread_results;
 
@@ -453,7 +461,7 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
         std::vector<fs::path> file_paths = {};
         collect_paths(collection_path, file_paths);
 
-        #pragma omp parallel
+        #pragma omp parallel if(this->parallel_processing)
         {
             std::vector<json> thread_results;
 
@@ -620,7 +628,7 @@ std::vector<json> nosqlite::collection::update_document(const std::vector<condit
     
     std::vector<json> updated;
 
-    #pragma omp parallel for
+    #pragma omp parallel for if(this->parallel_processing)
     for (const json &doc : matching_docs) {
         unsigned long long id = doc["id"];
         json j;
@@ -741,7 +749,7 @@ int collection::delete_with_conditions(const std::vector<condition_type> &condit
     if (use_index) {
         std::vector<std::string> paths = consult_hash_index(index_name, index_condition.value);
 
-        #pragma omp parallel for reduction(+ : docs_removed)
+        #pragma omp parallel for if(this->parallel_processing) reduction(+ : docs_removed)
         for (int i = 0; i < paths.size(); i++) {
             const std::string &path = paths[i];
 
@@ -752,7 +760,7 @@ int collection::delete_with_conditions(const std::vector<condition_type> &condit
         std::vector<fs::path> file_paths = {};
         collect_paths(collection_path, file_paths);
 
-        #pragma omp parallel for reduction(+ : docs_removed)
+        #pragma omp parallel for if(this->parallel_processing) reduction(+ : docs_removed)
         for (int i = 0; i < file_paths.size(); i++) {
             fs::path file_path = file_paths[i];
             docs_removed += delete_single(file_path, conditions);

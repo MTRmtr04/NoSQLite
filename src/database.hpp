@@ -27,7 +27,7 @@ namespace nosqlite {
         std::string path;
 
         /**
-         * @brief 
+         * @brief Map of collections.
          */
         std::unordered_map<std::string, collection*> collections;
 
@@ -49,6 +49,16 @@ namespace nosqlite {
          * @brief Destructor for the database class.
          */
         ~database();
+
+        /**
+         * @brief Turns on parallel processing
+         */
+        void turn_on_parallel_processing();
+
+        /**
+         * @brief Turns off parallel processing
+         */
+        void turn_off_parallel_processing();
 
         /**
         * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.

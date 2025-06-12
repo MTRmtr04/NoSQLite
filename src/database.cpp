@@ -18,6 +18,14 @@ database::~database() {
     }
 }
 
+void database::turn_on_parallel_processing() {
+    for (auto col : this->collections) col.second->turn_on_parallel_processing();
+}
+
+void database::turn_off_parallel_processing() {
+    for (auto col : this->collections) col.second->turn_off_parallel_processing();
+}
+
 int database::build_from_scratch(const std::string &path_to_json) {
 
     // Checks if the directory with the json files to create the database with exists.

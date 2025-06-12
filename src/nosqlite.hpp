@@ -60,6 +60,16 @@ namespace nosqlite {
         ~nosqlite_api();
 
         /**
+         * @brief Turns on parallel processing
+         */
+        void turn_on_parallel_processing();
+
+        /**
+         * @brief Turns off parallel processing
+         */
+        void turn_off_parallel_processing();
+
+        /**
          * @param results Reference for the results of the query.
          * @brief Executes the query that was build up to the point of execution.
          * @return Return 0 if the query was succesfull or 1 otherwise.

@@ -16,9 +16,17 @@ using json = nlohmann::json;
 
 
 int main(int argc, char** argv) {
+
+    if (argc != 3) {
+        cout << "USAGE: ./nosqlite <OPERATION> <PARALLEL FLAG>" << endl;
+        return 1;
+    }
     
     nosqlite_api api("db");
     vector<json> result = {};
+
+    if (atoi(argv[2]) == 0) api.turn_off_parallel_processing();
+    else api.turn_on_parallel_processing();
 
     switch (atoi(argv[1])) {
         case 1: {

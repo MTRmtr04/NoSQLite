@@ -41,6 +41,11 @@ namespace nosqlite {
         std::unordered_map<std::string, hash_index*> indexes;
 
         /**
+         * @brief Turns parallel processing on and off.
+         */
+        bool parallel_processing;
+
+        /**
          * @param json_content JSON document to add to the collection.
          * @param update_header Indicates whether the header file should be updated or not.
          * @brief Adds a new document to the collection, updates the indices and the header file (or not).
@@ -68,6 +73,16 @@ namespace nosqlite {
          * @brief Destructor for the collection class.
          */
         ~collection();
+
+        /**
+         * @brief Turns on parallel processing
+         */
+        void turn_on_parallel_processing();
+
+        /**
+         * @brief Turns off parallel processing
+         */
+        void turn_off_parallel_processing();
         
         /**
          * @param path_to_json Path to the directory with the files to build the collection.
