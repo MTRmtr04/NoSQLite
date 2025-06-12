@@ -132,8 +132,7 @@ int database::create_document(const std::string &col_name, json &document) {
 
 std::vector<json> database::read(const std::string &col_name, const std::vector<condition_type> &conditions) {
     if (conditions.empty()) {
-        // TODO: Read all documents.
-        return {};
+        return this->get_collection(col_name)->read_all(); 
     }
     else return this->get_collection(col_name)->read_with_conditions(conditions);
 }

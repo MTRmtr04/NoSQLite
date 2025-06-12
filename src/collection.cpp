@@ -329,6 +329,52 @@ std::vector<json> collection::read(const field_type &field, const json &value) c
     return results;
 }
 
+std::vector<json> nosqlite::collection::read_all() const {
+    std::vector<json> results;
+    fs::path collection_path = this->path;
+
+    // Uses parallel processing to speed up the query.
+    // Each thread has its own vector with results for the documents it collects.
+    // Each thread's result vector gets added to the all_thread_results vector.
+    // At the end of the parallel proccessing section all of the result in all_thread_results are pooled into the same vector and returned.
+    std::vector<std::vector<json>> all_thread_results;
+    int num_threads = 1;
+
+    std::vector<fs::path> file_paths = {};
+    collect_paths(collection_path, file_paths);
+
+    #pragma omp parallel
+    {
+        std::vector<json> thread_results;
+
+        #pragma omp single
+        {
+            num_threads = omp_get_num_threads();
+            all_thread_results.resize(num_threads);
+        }
+
+        #pragma omp barrier
+
+        int thread_num = omp_get_thread_num();
+
+        #pragma omp for
+        for (int i = 0; i < file_paths.size(); i++) {
+            const fs::path &file_path = file_paths[i];
+
+            json file_content = read_and_parse_json(file_path);
+            for (const json &doc : file_content) {
+                thread_results.push_back(doc);
+            }
+        }
+
+        all_thread_results[thread_num] = std::move(thread_results);
+    }
+
+    pool_results(all_thread_results, results);
+
+    return results;
+}
+
 std::vector<json> collection::read_with_conditions(const std::vector<condition_type> &conditions) const {
     std::vector<json> results;
     fs::path collection_path = this->path;
@@ -482,7 +528,6 @@ std::vector<std::string> collection::consult_hash_index(const std::string &index
     return index->consult(value);
 }
 
-//Update the entire object
 int collection::update_document(unsigned long long id, const json& updated_data){
     std::string idHash = hash_integer(id);
     fs::path directory = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2);
@@ -533,7 +578,6 @@ int collection::update_document(unsigned long long id, const json& updated_data)
             file.close();
             std::vector<std::string> possible_indices = build_possible_index_names(updated_data);
             for (const auto &index_name : possible_indices) {
-                std::cout << index_name << std::endl;
                 auto hsh_idx_it = this->indexes.find(index_name);
                 if (hsh_idx_it == this->indexes.end()) continue;
                 hsh_idx_it->second->update_index(original, final, path_to_doc.string());

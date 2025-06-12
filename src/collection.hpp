@@ -112,11 +112,17 @@ namespace nosqlite {
 
         /**
          * @param field List of nested fields to search on.
-         * @param value Value of the field to macth.
+         * @param value Value of the field to match.
          * @brief Searches for a document in the collection with the given field and value.
          * @return Returns a vector of JSON objects that match the search.
          */
         std::vector<json> read(const field_type &field, const json &value) const;
+
+        /**
+         * @brief Gets all the documents in the collection.
+         * @return Returns a vector with all the documents as JSON objects.
+         */
+        std::vector<json> read_all() const;
 
         /**
          * @param conditions List of conditions that condition the read operation.

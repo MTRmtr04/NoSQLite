@@ -30,14 +30,19 @@ int main() {
     auto duration = duration_cast<microseconds>(stop - start);
     cout << "first " << duration.count() << endl;
 */
-    // nosqlite_api api("db");
-    // vector<json> result = {};
-    // // api.create_index("movies", {"year"})->execute(result);
-    // // sleep(5);
+    nosqlite_api api("db");
+    vector<json> result = {};
+    // api.create_index("movies", {"year"})->execute(result);
+    // sleep(5);
     // api.delete_index("movies", {"year"})->execute(result);
-    database db("db");
-    db.build_from_existing();
-    collection* col = db.get_collection("movies");
+    api.read("movies")->execute(result);
+    for (const auto& doc : result) {
+        cout << doc.dump(4) << endl;
+    }
+    cout << "Total documents: " << result.size() << endl;
+    // database db("db");
+    // db.build_from_existing();
+    // collection* col = db.get_collection("movies");
 
 /*
     // READ
@@ -95,6 +100,7 @@ int main() {
     cout << "Final count: " << col->get_number_of_documents() << endl;
 */
 
+/*
     unsigned long long id = 10;
     json before = col->get_document(id);
     std::cout << "Before the update:\n" << before.dump(4) << "\n";
@@ -115,6 +121,16 @@ int main() {
     } else {
         cout << "Error on updating the document!" << endl;
     }
+*/
+
+/*
+    std::vector<json> all_docs = col->read_all();
+
+    for (const auto& doc : all_docs) {
+        std::cout << doc.dump(4) << std::endl;
+    }
+    std::cout << "Total documents: " << all_docs.size() << std::endl;
+*/
 
     return 0;
 }
