@@ -133,9 +133,18 @@ namespace nosqlite {
         /**
          * @param id Id of the document to
          * @param updated_data New data for the document.
-         * @brief Updated the entire document with the specified id.
+         * @param final Reference to a JSON object that will be filled with the final document.
+         * @brief Updated the document with the specified id.
          */
-        int update_document(unsigned long long id, const json& updated_data);
+        int update_document(unsigned long long id, const json& updated_data, json &final);
+        
+        /**
+         * @param conditions List of conditions that condition the update operation.
+         * @param updated_data New data for the documents.
+         * @brief Updated the documents that satisfy the given conditions.
+         * @return Returns the updated documents.
+         */
+        std::vector<json> update_document(const std::vector<condition_type> &conditions, const json& updated_data);
         
         /**
          * @param id Id of the document to get.

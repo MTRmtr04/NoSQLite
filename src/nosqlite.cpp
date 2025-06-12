@@ -55,6 +55,8 @@ int nosqlite_api::execute(std::vector<json> &results) {
             break;
         }
         case UPDATE: {
+            results = this->db->update(this->active_collection, this->conditions, this->active_json);
+            ret = 0;
             break;
         }
         case DELETE: {
@@ -100,9 +102,22 @@ nosqlite_api* nosqlite_api::read(std::string col_name, condition_type condition 
     return this;
 }
 
-nosqlite_api* nosqlite_api::AND(condition_type condition) {
-    if (valid_condition(condition)) this->conditions.push_back(condition);
+nosqlite_api *nosqlite::nosqlite_api::update(std::string col_name, json update_data, condition_type condition) {
+    this->active_query_type = UPDATE;
+    this->active_collection = col_name;
+    this->active_json = update_data;
+
+    if (valid_condition(condition)) {
+        this->conditions.push_back(condition);
+    }
     return this;
+}
+
+nosqlite_api *nosqlite_api::AND(condition_type condition)
+{
+  if (valid_condition(condition))
+    this->conditions.push_back(condition);
+  return this;
 }
 
 bool nosqlite_api::valid_condition(condition_type condition) {

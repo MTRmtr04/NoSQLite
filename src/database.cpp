@@ -137,6 +137,20 @@ std::vector<json> database::read(const std::string &col_name, const std::vector<
     else return this->get_collection(col_name)->read_with_conditions(conditions);
 }
 
+std::vector<json> nosqlite::database::update(const std::string &col_name, const std::vector<condition_type> &conditions, const json &updated_data) {
+    if (conditions.empty()) {
+        std::cerr << "Error: No conditions provided for update." << std::endl;
+        return {};
+    }
+
+    if (updated_data.empty()) {
+        std::cerr << "Error: No data provided to update." << std::endl;
+        return {};
+    }
+
+    return this->get_collection(col_name)->update_document(conditions, updated_data);
+}
+
 int database::delete_collection(const std::string &col_name) {
     if (this->collections.find(col_name) == this->collections.end()) {
         std::cerr << "Error: Collection with name \"" << col_name << "\" does not exist." << std::endl;

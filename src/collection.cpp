@@ -528,7 +528,12 @@ std::vector<std::string> collection::consult_hash_index(const std::string &index
     return index->consult(value);
 }
 
-int collection::update_document(unsigned long long id, const json& updated_data){
+int collection::update_document(unsigned long long id, const json& updated_data, json &final) {
+    if (updated_data.empty()) {
+        std::cerr << "Error: No data provided to update." << std::endl;
+        return 1;
+    }
+
     std::string idHash = hash_integer(id);
     fs::path directory = fs::path(this->path) / idHash.substr(0, 2) / idHash.substr(2, 2);
     fs::path path_to_doc = directory / idHash.substr(4).append(".json");
@@ -539,7 +544,7 @@ int collection::update_document(unsigned long long id, const json& updated_data)
     }
 
     json doc_array = read_and_parse_json(path_to_doc);
-    json original; json final;
+    json original;
     bool updated = false;
     for(auto &doc : doc_array){
         if(doc.contains("id") && doc["id"] == id){
@@ -591,6 +596,50 @@ int collection::update_document(unsigned long long id, const json& updated_data)
         std::cerr << "Error: Document with ID \"" << id << "\" not found in file." << std::endl;
         return 1;
     }
+}
+
+std::vector<json> nosqlite::collection::update_document(const std::vector<condition_type> &conditions, const json &updated_data) {
+    if (updated_data.empty()) {
+        std::cerr << "Error: No data provided to update." << std::endl;
+        return {};
+    }
+
+    if (conditions.empty()) {
+        std::cerr << "Error: No conditions provided for update." << std::endl;
+        return {};
+    }
+
+    // Get all documents that match the conditions.
+    std::vector<json> matching_docs = this->read_with_conditions(conditions);
+    
+    if (matching_docs.empty()) {
+        std::cerr << "Error: No documents match the provided conditions." << std::endl;
+        return {};
+    }
+    
+    std::vector<json> updated;
+
+    #pragma omp parallel for
+    for (const json &doc : matching_docs) {
+        unsigned long long id = doc["id"];
+        json j;
+        if (this->update_document(id, updated_data, j) == 0) {
+            #pragma omp critical
+            {
+                // TODO: Should return updated document. This one is the original.
+                updated.push_back(j);
+            }
+        }
+        else {
+            #pragma omp critical
+            {
+                std::cerr << "Error: Failed to update document with ID \"" << id << "\"." << std::endl;
+                std::cerr << "Continuing..." << std::endl;
+            }
+        }
+    }
+
+    return updated;
 }
 
 json collection::get_document(unsigned long long id) const {

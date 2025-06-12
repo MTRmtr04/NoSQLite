@@ -100,6 +100,15 @@ namespace nosqlite {
 
         /**
          * @param col_name Name of the collection.
+         * @param conditions These values impose conditions on the documents that are updated.
+         * @param updated_data New data for the documents.
+         * @brief Updates the documents in the database according to the conditions and update data.
+         * @return Returns the updated documents.
+         */
+        std::vector<json> update(const std::string &col_name, const std::vector<condition_type> &conditions, const json &updated_data);
+
+        /**
+         * @param col_name Name of the collection.
          * @brief Deletes a collection from the database.
          * @return 0 on success and 1 otherwise 
          */

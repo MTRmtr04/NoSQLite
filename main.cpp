@@ -35,7 +35,31 @@ int main() {
     // api.create_index("movies", {"year"})->execute(result);
     // sleep(5);
     // api.delete_index("movies", {"year"})->execute(result);
-    api.read("movies")->execute(result);
+    // read movies from 2004
+    api.read("movies", {
+        {"year"}, "==", 2004
+    })->AND({
+        {"genres"}, "==", "Documentary"
+    })->AND({
+        {"countries"}, "==", "Germany"
+    })->execute(result);
+    for (const auto& doc : result) {
+        cout << doc.dump(4) << endl;
+    }
+    cout << "Total documents: " << result.size() << endl;
+
+    api.update("movies", {
+        {"imdb", {
+            {"rating", 9.5},
+        }}
+    },{
+        {"year"}, "==", 2004
+    })->AND({
+        {"genres"}, "==", "Documentary"
+    })->AND({
+        {"countries"}, "==", "Germany"
+    })->execute(result);
+
     for (const auto& doc : result) {
         cout << doc.dump(4) << endl;
     }

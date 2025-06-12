@@ -83,6 +83,15 @@ namespace nosqlite {
         nosqlite_api* read(std::string col_name, condition_type condition = empty_condition);
 
         /**
+         * @param col_name Name of the collection.
+         * @param update_data JSON with the data to update the documents with.
+         * @param condition The operation will be conditioned according to this value.
+         * @brief Sets up the read operation of the specified collection with the specified condition.
+         * @return Returns self.
+         */
+        nosqlite_api* update(std::string col_name, json update_data, condition_type condition = empty_condition);
+
+        /**
          * @param condition The operation will be conditioned according to this value.
          * @brief Adds a condition to the operation that is being build.
          * @return Returns self.
