@@ -126,14 +126,6 @@ namespace nosqlite {
         int create_document(const nlohmann::json &new_document);
 
         /**
-         * @param field List of nested fields to search on.
-         * @param value Value of the field to match.
-         * @brief Searches for a document in the collection with the given field and value.
-         * @return Returns a vector of JSON objects that match the search.
-         */
-        std::vector<json> read(const field_type &field, const json &value) const;
-
-        /**
          * @brief Gets all the documents in the collection.
          * @return Returns a vector with all the documents as JSON objects.
          */
@@ -180,14 +172,6 @@ namespace nosqlite {
          * @brief Wrapper to consult a hash index.
          */
         std::vector<std::string> consult_hash_index(const std::string &index_name, const json &value) const;
- 
-        /**
-          * @param field Name of the field to match for deletion.
-          * @param value Value to match against the field.
-          * @brief Deletes all documents in the collection where the specified field matches the given value.
-          * @return Returns the number of documents deleted or -1 if an error occurred.
-        */
-        int delete_document(const field_type &field, const json &value);
         
         /**
          * @param conditions Vector of tuples with (field_path, operator, value)

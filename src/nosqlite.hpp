@@ -19,7 +19,7 @@ using json = nlohmann::json;
  */
 namespace nosqlite {
 
-    enum query_type {NONE, CREATE, READ, UPDATE, DELETE, CREATE_INDEX, DELETE_INDEX, CREATE_COLLECTION, DELETE_COLLECTION};
+    enum query_type {NONE, CREATE, READ, UPDATE, REMOVE, CREATE_INDEX, DELETE_INDEX, CREATE_COLLECTION, DELETE_COLLECTION};
 
     /**
      * @class nosqlite
@@ -96,10 +96,18 @@ namespace nosqlite {
          * @param col_name Name of the collection.
          * @param update_data JSON with the data to update the documents with.
          * @param condition The operation will be conditioned according to this value.
-         * @brief Sets up the read operation of the specified collection with the specified condition.
+         * @brief Sets up the update operation of the specified collection with the specified condition.
          * @return Returns self.
          */
         nosqlite_api* update(std::string col_name, json update_data, condition_type condition = empty_condition);
+
+        /**
+         * @param col_name Name of the collection.
+         * @param condition The operation will be conditioned according to this value.
+         * @brief Sets up the remove operation of the specified collection with the specified condition.
+         * @return Returns self.
+         */
+        nosqlite_api* remove(std::string col_name, condition_type condition);
 
         /**
          * @param condition The operation will be conditioned according to this value.

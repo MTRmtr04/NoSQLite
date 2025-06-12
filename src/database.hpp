@@ -119,6 +119,14 @@ namespace nosqlite {
 
         /**
          * @param col_name Name of the collection.
+         * @param conditions These values impose conditions on the documents that are deleted.
+         * @brief Deletes documents in the database according to the conditions.
+         * @return Returns the number of deleted documents.
+         */
+        int remove(const std::string &col_name, const std::vector<condition_type> &conditions = {});
+
+        /**
+         * @param col_name Name of the collection.
          * @brief Deletes a collection from the database.
          * @return 0 on success and 1 otherwise 
          */

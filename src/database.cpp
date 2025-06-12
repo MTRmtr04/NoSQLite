@@ -159,37 +159,52 @@ std::vector<json> nosqlite::database::update(const std::string &col_name, const 
     return this->get_collection(col_name)->update_document(conditions, updated_data);
 }
 
-int database::delete_collection(const std::string &col_name) {
-    if (this->collections.find(col_name) == this->collections.end()) {
-        std::cerr << "Error: Collection with name \"" << col_name << "\" does not exist." << std::endl;
-        return 1;
+int nosqlite::database::remove(const std::string &col_name, const std::vector<condition_type> &conditions) {
+    if (conditions.empty()) {
+        std::cerr << "Error: No conditions provided for removal." << std::endl;
+        return 0;
     }
-    collection *col = this->get_collection(col_name);
-    col->delete_collection();
-    this->collections.erase(col_name);
-    delete col;
 
-    fs::path header_path = fs::path(this->path) / "header.json";
-    json header = read_and_parse_json(header_path);
-    std::vector<std::string> cols;
-    header["collections"].get_to(cols);
-    std::vector<std::string> new_cols = {};
-    for (const std::string &col : cols) {
-        if (col == col_name) continue;
-        new_cols.push_back(col);
-    }
-    header["collections"] = new_cols;
+    return this->get_collection(col_name)->delete_with_conditions(conditions);
+}
 
-    std::ofstream header_file(header_path);
-    if (header_file.is_open()) {
-        header_file << header << std::endl;
-        header_file.close();
-    }
-    else {
-        throw_failed_to_update_header("");
-        return 1;
-    }
-    return 0;
+int database::delete_collection(const std::string &col_name)
+{
+  if (this->collections.find(col_name) == this->collections.end())
+  {
+    std::cerr << "Error: Collection with name \"" << col_name << "\" does not exist." << std::endl;
+    return 1;
+  }
+  collection *col = this->get_collection(col_name);
+  col->delete_collection();
+  this->collections.erase(col_name);
+  delete col;
+
+  fs::path header_path = fs::path(this->path) / "header.json";
+  json header = read_and_parse_json(header_path);
+  std::vector<std::string> cols;
+  header["collections"].get_to(cols);
+  std::vector<std::string> new_cols = {};
+  for (const std::string &col : cols)
+  {
+    if (col == col_name)
+      continue;
+    new_cols.push_back(col);
+  }
+  header["collections"] = new_cols;
+
+  std::ofstream header_file(header_path);
+  if (header_file.is_open())
+  {
+    header_file << header << std::endl;
+    header_file.close();
+  }
+  else
+  {
+    throw_failed_to_update_header("");
+    return 1;
+  }
+  return 0;
 }
 
 int database::create_collection(const std::string &col_name, const std::string &path_to_files) {

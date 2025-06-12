@@ -67,7 +67,14 @@ int nosqlite_api::execute(std::vector<json> &results) {
             ret = 0;
             break;
         }
-        case DELETE: {
+        case REMOVE: {
+            if (this->conditions.empty()) {
+                std::cerr << "Error: No conditions provided for removal." << std::endl;
+            } else {
+                int i = this->db->remove(this->active_collection, this->conditions);
+                results.assign(i, json::object());
+            }
+            ret = 0;
             break;
         }
         case DELETE_INDEX: {
@@ -115,6 +122,16 @@ nosqlite_api *nosqlite::nosqlite_api::update(std::string col_name, json update_d
     this->active_collection = col_name;
     this->active_json = update_data;
 
+    if (valid_condition(condition)) {
+        this->conditions.push_back(condition);
+    }
+    return this;
+}
+
+nosqlite_api *nosqlite::nosqlite_api::remove(std::string col_name, condition_type condition) {
+    this->active_query_type = REMOVE;
+    this->active_collection = col_name;
+    
     if (valid_condition(condition)) {
         this->conditions.push_back(condition);
     }
