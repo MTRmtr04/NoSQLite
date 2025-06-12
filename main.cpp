@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
                 {"imdb", {"rating", 8.1}}
             })->execute(result);
             auto stop = high_resolution_clock::now();
-            auto duration = duration_cast<microseconds>(stop - start);
-            cout << "Time taken for create: " << duration.count() << endl;
+            auto duration = duration_cast<milliseconds>(stop - start);
+            cout << "Time taken for create: " << duration.count() << "ms" << endl;
             
             api.read("movies", {{"title"}, "==", "Memories of Murder"})->execute(result);
             cout << "Number of documents: " << result.size() << endl;
@@ -44,8 +44,8 @@ int main(int argc, char** argv) {
             start = high_resolution_clock::now();
             //TODO: delete.
             stop = high_resolution_clock::now();
-            duration = duration_cast<microseconds>(stop - start);
-            cout << "Time taken for delete: " << duration.count() << endl;
+            duration = duration_cast<milliseconds>(stop - start);
+            cout << "Time taken for delete: " << duration.count() << "ms" << endl;
 
             api.read("movies", {{"title"}, "==", "Memories of Murder"})->execute(result);
             cout << "Number of documents: " << result.size() << endl;
@@ -60,16 +60,18 @@ int main(int argc, char** argv) {
                 {"genres"}, "==", "Documentary"
             })->AND({
                 {"countries"}, "==", "Germany"
+            })->AND({
+                {"imdb", "rating"}, ">=", 7.6
             })->execute(result);
             auto stop = high_resolution_clock::now();
-            auto duration = duration_cast<microseconds>(stop - start);
+            auto duration = duration_cast<milliseconds>(stop - start);
 
             for (const auto& doc : result) {
                 cout << endl << endl << "-----" << doc["id"] << "-----" << endl << endl;
                 cout << doc.dump(4) << endl;
             }
             cout << "Total documents: " << result.size() << endl;
-            cout << "Time taken for read: " << duration.count() << endl;
+            cout << "Time taken for read: " << duration.count() << "ms" << endl;
             break;
         }
         case 3: {
@@ -85,24 +87,34 @@ int main(int argc, char** argv) {
                 {"genres"}, "==", "Documentary"
             })->AND({
                 {"countries"}, "==", "Germany"
+            })->AND({
+                {"imdb", "rating"}, ">=", 7.6
             })->execute(result);
             auto stop = high_resolution_clock::now();
-            auto duration = duration_cast<microseconds>(stop - start);
+            auto duration = duration_cast<milliseconds>(stop - start);
 
             for (const auto& doc : result) {
                 cout << endl << endl << "-----" << doc["id"] << "-----" << endl << endl;
                 cout << doc.dump(4) << endl;
             }
             cout << "Total documents: " << result.size() << endl;
-            cout << "Time taken for update: " << duration.count() << endl;
+            cout << "Time taken for update: " << duration.count() << "ms" << endl;
             break;
         }
         case 4: {
             auto start = high_resolution_clock::now();
             api.create_index("movies", {"year"})->execute(result);
             auto stop = high_resolution_clock::now();
-            auto duration = duration_cast<microseconds>(stop - start);
-            cout << "Time taken for index creation: " << duration.count() << endl;
+            auto duration = duration_cast<milliseconds>(stop - start);
+            cout << "Time taken for index creation: " << duration.count() << "ms" << endl;
+            break;
+        }
+        case 5: {
+            auto start = high_resolution_clock::now();
+            api.delete_index("movies", {"year"})->execute(result);
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<milliseconds>(stop - start);
+            cout << "Time taken for index deletion: " << duration.count() << "ms" << endl;
             break;
         }
         default: {
@@ -110,20 +122,5 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
-
-/*
-    std::vector<condition_type> conditions = {
-        {{"year"}, ">", 2008},
-        {{"year"}, "<", 2010},
-        {{"imdb", "rating"}, ">", 6},
-        {{"tomatoes","critic", "rating"}, ">", 7}
-    };
-
-    auto start = high_resolution_clock::now();
-    auto stop = high_resolution_clock::now();
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
-    cout << "first " << duration.count() << endl;
-*/
     return 0;
 }
