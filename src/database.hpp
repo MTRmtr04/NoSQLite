@@ -62,7 +62,7 @@ namespace nosqlite {
 
         /**
         * @param path_to_json Path to the json files that will build the database. Must be a directory. Each subdirectory will be taken as an individual collection.
-        * @brief Build a database from scratch using the json files in path_to_json. Will delete everyting in the path directory.
+        * @brief Build a database from scratch using the json files in path_to_json. Will delete everything in the path directory.
         * @return 0 on success and 1 otherwise.
         */
         int build_from_scratch(const std::string &path_to_json);

@@ -124,8 +124,8 @@ collection* database::get_collection(const std::string &col) const {
     return this->collections.at(col);
 }
 
-void database::set_collection(const std::string &colletion_name, collection* col) {
-    this->collections[colletion_name] = col;
+void database::set_collection(const std::string &collection_name, collection* col) {
+    this->collections[collection_name] = col;
 }
 
 int database::create_hash_index(const std::string &col_name, const field_type &field) {
@@ -146,10 +146,10 @@ std::vector<json> database::read(const std::string &col_name, const std::vector<
 }
 
 std::vector<json> nosqlite::database::update(const std::string &col_name, const std::vector<condition_type> &conditions, const json &updated_data) {
-    if (conditions.empty()) {
-        std::cerr << "Error: No conditions provided for update." << std::endl;
-        return {};
-    }
+    // if (conditions.empty()) {
+    //     std::cerr << "Error: No conditions provided for update." << std::endl;
+    //     return {};
+    // }
 
     if (updated_data.empty()) {
         std::cerr << "Error: No data provided to update." << std::endl;

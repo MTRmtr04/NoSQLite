@@ -21,8 +21,12 @@ int main(int argc, char** argv) {
         cout << "USAGE: ./nosqlite <OPERATION> <PARALLEL FLAG>" << endl;
         return 1;
     }
-    
+    auto start1 = high_resolution_clock::now();
     nosqlite_api api("db");
+    auto stop1 = high_resolution_clock::now();
+    auto duration1 = duration_cast<milliseconds>(stop1 - start1);
+    cout << "Time taken for build: " << duration1.count() << "ms" << endl;
+            
     vector<json> result = {};
 
     if (atoi(argv[2]) == 0) api.turn_off_parallel_processing();
@@ -66,7 +70,7 @@ int main(int argc, char** argv) {
             api.read("movies", {
                 {"year"}, "==", 2004
             })->AND({
-                {"genres"}, "==", "Documentary"
+                {"genres"}, "==", {"Documentary"}
             })->AND({
                 {"countries"}, "==", "Germany"
             })->AND({

@@ -253,7 +253,7 @@ std::vector<json> nosqlite::collection::read_all() const {
     // Uses parallel processing to speed up the query.
     // Each thread has its own vector with results for the documents it collects.
     // Each thread's result vector gets added to the all_thread_results vector.
-    // At the end of the parallel proccessing section all of the result in all_thread_results are pooled into the same vector and returned.
+    // At the end of the parallel processing section all of the result in all_thread_results are pooled into the same vector and returned.
     std::vector<std::vector<json>> all_thread_results;
     int num_threads = 1;
 
@@ -303,11 +303,17 @@ std::vector<json> nosqlite::collection::read_all() const {
 std::vector<json> collection::read_with_conditions(const std::vector<condition_type> &conditions) const {
     std::vector<json> results;
     fs::path collection_path = this->path;
+    field_type id = {"id"};
+    for(const auto &[field_path, op, target_value] : conditions) {
+        if (op == "==")
+            // Read by document id
+            if (field_path == id) return { this->get_document(target_value) };
+    }
 
     condition_type index_condition = {};
     std::string index_name = "";
     bool use_index = false;
-    for(const auto &[field_path, op, target_value] : conditions){
+    for(const auto &[field_path, op, target_value] : conditions) {
         if (op == "==") {
             index_name = build_index_name(field_path);
             
@@ -322,7 +328,7 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
     // Uses parallel processing to speed up the query.
     // Each thread has its own vector with results for the documents it collects.
     // Each thread's result vector gets added to the all_thread_results vector.
-    // At the end of the parallel proccessing section all of the result in all_thread_results are pooled into the same vector and returned.
+    // At the end of the parallel processing section all of the result in all_thread_results are pooled into the same vector and returned.
     std::vector<std::vector<json>> all_thread_results;
     int num_threads = 1;
 
@@ -545,13 +551,14 @@ std::vector<json> nosqlite::collection::update_document(const std::vector<condit
         return {};
     }
 
-    if (conditions.empty()) {
-        std::cerr << "Error: No conditions provided for update." << std::endl;
-        return {};
-    }
-
+    std::vector<json> matching_docs;
     // Get all documents that match the conditions.
-    std::vector<json> matching_docs = this->read_with_conditions(conditions);
+    if (conditions.empty()) {
+        // std::cerr << "Error: No conditions provided for update." << std::endl;
+        // return {};
+        matching_docs = this->read_all();
+    }
+    else matching_docs = this->read_with_conditions(conditions);
     
     if (matching_docs.empty()) {
         std::cerr << "Error: No documents match the provided conditions." << std::endl;
