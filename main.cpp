@@ -70,9 +70,9 @@ int main(int argc, char** argv) {
             api.read("movies", {
                 {"year"}, "==", 2004
             })->AND({
-                {"genres"}, "==", {"Documentary"}
+                {"genres"}, "==", "Documentary"
             })->AND({
-                {"countries"}, "==", "Germany"
+               {"countries"}, "==", "Germany"
             })->AND({
                 {"imdb", "rating"}, ">=", 7.6
             })->execute(result);

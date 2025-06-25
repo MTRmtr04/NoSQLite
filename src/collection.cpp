@@ -475,6 +475,30 @@ std::vector<std::string> collection::consult_hash_index(const std::string &index
     return index->consult(value);
 }
 
+int update_aux(json& doc, const json& updated_data) {
+
+    for (auto it = updated_data.begin(); it != updated_data.end(); ++it) {
+        if (it.key() == "id") continue;
+
+        if(doc.contains(it.key()) && !doc[it.key()].is_null()) {
+            if (!doc[it.key()].is_object()) {
+                doc[it.key()] = it.value();
+            }
+            else if (it.value().is_object()) {
+                update_aux(doc[it.key()], it.value());
+            }
+            else {
+                doc[it.key()] = it.value();
+            }
+        }
+        else {
+            doc[it.key()] = it.value();
+        }
+    }
+
+    return 0;
+}
+
 int collection::update_document(unsigned long long id, const json& updated_data, json &final) {
     if (updated_data.empty()) {
         std::cerr << "Error: No data provided to update." << std::endl;
@@ -511,11 +535,12 @@ int collection::update_document(unsigned long long id, const json& updated_data,
                 return 1;
             }
 
-            for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
-                if(it.key() != "id"){
-                    doc[it.key()] = it.value();
-                }
-            }
+            // for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
+            //     if(it.key() != "id"){
+            //         doc[it.key()] = it.value();
+            //     }
+            // }
+            update_aux(doc, updated_data);
 
             final = doc;
             updated = true;
@@ -574,7 +599,6 @@ std::vector<json> nosqlite::collection::update_document(const std::vector<condit
         if (this->update_document(id, updated_data, j) == 0) {
             #pragma omp critical
             {
-                // TODO: Should return updated document. This one is the original.
                 updated.push_back(j);
             }
         }
