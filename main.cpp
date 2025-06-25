@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
             result = {};
 
             start = high_resolution_clock::now();
-            api.remove("movies", {{"title"}, "==", "Memories of Murder"})->execute(result);
+            api.remove("movies", {{"year"}, "==", 2004})->AND({{"title"}, "==", "Memories of Murder"})->execute(result);
             stop = high_resolution_clock::now();
             duration = duration_cast<milliseconds>(stop - start);
             cout << "Number of documents deleted: " << result.size() << endl;
