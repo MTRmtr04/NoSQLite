@@ -74,6 +74,8 @@ namespace nosqlite {
          */
         void update_index(json new_value, const std::string &document_path);
 
+        void remove_from_index(json value, field_type field, const std::string &document_path);
+
     };
 
 }

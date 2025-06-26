@@ -665,6 +665,7 @@ int collection::delete_single(const fs::path &file_path, const std::vector<condi
     json remaining_docs = json::array();
     bool file_modified = false;
 
+
     for (const auto &doc : file_content) {
         bool satisfies_all = true;
 
@@ -682,6 +683,26 @@ int collection::delete_single(const fs::path &file_path, const std::vector<condi
         }
 
         if (satisfies_all) {
+
+            std::vector<field_type> possible_indices = {};
+            for (auto index : this->indexes) {
+                std::string index_name = index.first;
+                std::stringstream ss(index_name);
+                field_type field = {};
+                std::string f;
+                std::getline(ss, f, '_');
+                while (std::getline(ss, f, '_')) field.push_back(f);
+
+                possible_indices.push_back(field);
+            }
+            for (const field_type &index_name : possible_indices) {
+                if (find_nested_field(doc, index_name)) {
+                    auto hsh_idx_it = this->indexes.find(build_index_name(index_name));
+                    if (hsh_idx_it == this->indexes.end()) continue;
+                    hsh_idx_it->second->remove_from_index(access_nested_fields(doc, index_name), index_name, file_path);
+                }   
+            }
+
             docs_removed++;
             file_modified = true;
         } else {

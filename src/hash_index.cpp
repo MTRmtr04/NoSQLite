@@ -187,6 +187,36 @@ void nosqlite::hash_index::update_index(json new_value, const std::string &docum
     }
 }
 
+void nosqlite::hash_index::remove_from_index(json value, field_type field, const std::string &document_path) {
+    json doc = read_and_parse_json(fs::path(document_path));
+    if (doc.size() > 1) {
+        int count = 0;
+        for (json d : doc) {
+            if (access_nested_fields(d, field) == value) count++;
+        }
+
+        if (count > 1) return;
+    }
+    std::string hash = hash_json(value);
+    fs::path path_to_index_file = fs::path(this->path) / hash.substr(0, 2) / hash.substr(2, 2) / "index.json";
+    if (fs::exists(path_to_index_file)) {
+        json index = read_and_parse_json(path_to_index_file);
+        json i = index[hash.substr(4)];
+        json new_i = json::array();
+
+        for (json p : i) {
+            if (p != document_path) new_i.push_back(p);
+        }
+        
+        index[hash.substr(4)] = new_i;
+        std::ofstream file(path_to_index_file);
+        if (file.is_open()) file << index;
+        else throw_failed_to_open_file(path_to_index_file);
+
+        file.close();
+    }
+}
+
 void hash_index::delete_index() {
     fs::remove_all(this->get_path());
 }
