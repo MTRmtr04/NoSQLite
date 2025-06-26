@@ -68,6 +68,7 @@ int nosqlite_api::execute(std::vector<json> &results) {
             break;
         }
         case REMOVE: {
+
             if (this->conditions.empty()) {
                 std::cerr << "Error: No conditions provided for removal." << std::endl;
             } else {

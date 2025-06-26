@@ -164,7 +164,6 @@ int collection::add_document(json &json_object, bool update_header) {
     fs::path path_to_document = directory / idHash.substr(4).append(".json");
 
     // Prints the path for the created files
-    //std::cout << "New document created here: " << path_to_document << std::endl;
 
     // Create a new one or edit the file if it already exists (in case of a hash collision).
     if (fs::exists(path_to_document)) {
@@ -200,13 +199,25 @@ int collection::add_document(json &json_object, bool update_header) {
         file.close();
     }
 
-    // std::vector<std::string> possible_indices = build_possible_index_names(json_object);
-    // for (const auto &index_name : possible_indices) {
-    //     auto hsh_idx_it = this->indexes.find(index_name);
-    //     if (hsh_idx_it == this->indexes.end()) continue;
-    //     hsh_idx_it->second->update_index(original, final, path_to_doc.string());
-    // }
+    std::vector<field_type> possible_indices = {};
+    for (auto index : this->indexes) {
+        std::string index_name = index.first;
+        std::stringstream ss(index_name);
+        field_type field = {};
+        std::string f;
+        std::getline(ss, f, '_');
+        while (std::getline(ss, f, '_')) field.push_back(f);
 
+        possible_indices.push_back(field);
+    }
+    for (const field_type &index_name : possible_indices) {
+        if (find_nested_field(json_object, index_name)) {
+            auto hsh_idx_it = this->indexes.find(build_index_name(index_name));
+            if (hsh_idx_it == this->indexes.end()) continue;
+            hsh_idx_it->second->update_index(access_nested_fields(json_object, index_name), path_to_document.string());
+        }   
+    }
+    
     // Once everything else is successful increment the number of documents.
     if (update_header) {
         std::ofstream header(fs::path(this->path) / "header.json");
@@ -341,7 +352,6 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
 
     if (use_index) {
         std::vector<std::string> paths = this->consult_hash_index(index_name, index_condition.value);
-
         #pragma omp parallel if(this->parallel_processing)
         {
             std::vector<json> thread_results;
@@ -542,11 +552,6 @@ int collection::update_document(unsigned long long id, const json& updated_data,
                 return 1;
             }
 
-            // for(auto it = updated_data.begin(); it != updated_data.end(); ++it){
-            //     if(it.key() != "id"){
-            //         doc[it.key()] = it.value();
-            //     }
-            // }
             update_aux(doc, updated_data);
 
             final = doc;
@@ -704,6 +709,7 @@ int collection::delete_single(const fs::path &file_path, const std::vector<condi
 }
 
 int collection::delete_with_conditions(const std::vector<condition_type> &conditions) {
+
     int docs_removed = 0;
     fs::path collection_path = this->path;
     bool modified = false;

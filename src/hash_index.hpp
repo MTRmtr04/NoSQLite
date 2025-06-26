@@ -66,6 +66,13 @@ namespace nosqlite {
          * @brief Updates the hash index. Should be called after updating a value for an indexed field.
          */
         void update_index(json original_value, json updated_value, const std::string &document_path);
+        
+        /**
+         * @param new_value New indexed value.
+         * @param document_path Path to the updated document.
+         * @brief Updates the hash index. Should be called after updating a value for an indexed field.
+         */
+        void update_index(json new_value, const std::string &document_path);
 
     };
 

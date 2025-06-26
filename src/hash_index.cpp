@@ -146,6 +146,35 @@ void hash_index::update_index(json original_value, json updated_value, const std
         file.close();
     }
     else {
+        fs::create_directories(fs::path(path_to_index_file).remove_filename());
+        std::ofstream file(path_to_index_file);
+        if (file.is_open()) {
+            json index = {};
+            index[hash.substr(4)].push_back(document_path);
+            file << index;
+        }
+        else throw_failed_to_create_file(path_to_index_file);
+
+        file.close();
+    }
+}
+
+void nosqlite::hash_index::update_index(json new_value, const std::string &document_path) {
+
+    std::string hash = hash_json(new_value);
+    fs::path path_to_index_file = fs::path(this->path) / hash.substr(0, 2) / hash.substr(2, 2) / "index.json";
+    if (fs::exists(path_to_index_file)) {
+        json index = read_and_parse_json(path_to_index_file);
+        index[hash.substr(4)].push_back(document_path);
+
+        std::ofstream file(path_to_index_file);
+        if (file.is_open()) file << index;
+        else throw_failed_to_open_file(path_to_index_file);
+
+        file.close();
+    }
+    else {
+        fs::create_directories(fs::path(path_to_index_file).remove_filename());
         std::ofstream file(path_to_index_file);
         if (file.is_open()) {
             json index = {};
