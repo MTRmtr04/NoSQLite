@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
             result = {};
 
             start = high_resolution_clock::now();
-            api.remove("movies", {{"year"}, "==", 2004})->AND({{"title"}, "==", "Memories of Murder"})->execute(result);
+            api.remove("movies", {{"title"}, "==", "Memories of Murder"})->execute(result);//->AND({{"title"}, "==", "Memories of Murder"})->execute(result);
             stop = high_resolution_clock::now();
             duration = duration_cast<milliseconds>(stop - start);
             cout << "Number of documents deleted: " << result.size() << endl;
@@ -68,13 +68,13 @@ int main(int argc, char** argv) {
             // Read
             auto start = high_resolution_clock::now();
             api.read("movies", {
-                {"year"}, "==", 2004
-            })->AND({
-                {"genres"}, "==", "Documentary"
-            })->AND({
-               {"countries"}, "==", "Germany"
-            })->AND({
-                {"imdb", "rating"}, ">=", 7.6
+                {"title"}, "==", "The Avengers"
+            // })->AND({
+            //     {"genres"}, "==", "Documentary"
+            // })->AND({
+            //    {"countries"}, "==", "Germany"
+            // })->AND({
+            //     {"imdb", "rating"}, ">=", 7.6
             })->execute(result);
             auto stop = high_resolution_clock::now();
             auto duration = duration_cast<milliseconds>(stop - start);
@@ -93,13 +93,14 @@ int main(int argc, char** argv) {
             api.update("movies", {
                 {"runtime", 42},
             },{
-                {"year"}, "==", 2004
-            })->AND({
-                {"genres"}, "==", "Documentary"
-            })->AND({
-                {"countries"}, "==", "Germany"
-            })->AND({
-                {"imdb", "rating"}, ">=", 7.6
+                {"title"}, "==", "The Avengers"
+            //     {"year"}, "==", 2004
+            // })->AND({
+            //     {"genres"}, "==", "Documentary"
+            // })->AND({
+            //     {"countries"}, "==", "Germany"
+            // })->AND({
+            //     {"imdb", "rating"}, ">=", 7.6
             })->execute(result);
             auto stop = high_resolution_clock::now();
             auto duration = duration_cast<milliseconds>(stop - start);
@@ -123,6 +124,22 @@ int main(int argc, char** argv) {
         case 5: {
             auto start = high_resolution_clock::now();
             api.delete_index("movies", {"year"})->execute(result);
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<milliseconds>(stop - start);
+            cout << "Time taken for index deletion: " << duration.count() << "ms" << endl;
+            break;
+        }
+        case 6: {
+            auto start = high_resolution_clock::now();
+            api.create_index("movies", {"title"})->execute(result);
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<milliseconds>(stop - start);
+            cout << "Time taken for index creation: " << duration.count() << "ms" << endl;
+            break;
+        }
+        case 7: {
+            auto start = high_resolution_clock::now();
+            api.delete_index("movies", {"title"})->execute(result);
             auto stop = high_resolution_clock::now();
             auto duration = duration_cast<milliseconds>(stop - start);
             cout << "Time taken for index deletion: " << duration.count() << "ms" << endl;
