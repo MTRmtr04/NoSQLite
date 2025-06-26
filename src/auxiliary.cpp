@@ -109,6 +109,19 @@ namespace nosqlite {
         return obj;
     }
 
+    bool find_nested_field(json content, field_type field) {
+        if (field.size() == 1) return content.find(field[0]) != content.end();
+        else if (field.size() == 0) return false;
+        else {
+            auto obj = content.find(field[0]);
+            if (obj == content.end()) return false;
+            else {
+                field.erase(field.begin());
+                return find_nested_field((*obj), field);
+            }
+        }
+    }
+
     std::vector<std::string> build_possible_index_names(const json &data, const std::string &prefix) {
         std::vector<std::string> index_names;
 

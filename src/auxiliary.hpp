@@ -124,6 +124,8 @@ namespace nosqlite {
      */
     json access_nested_fields(json content, field_type fields);
     
+    bool find_nested_field(json content, field_type field);
+
     /**
      * @param data JSON object with the data to build the index names from.
      * @param prefix Prefix to be added to the index names.

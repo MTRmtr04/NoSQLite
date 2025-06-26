@@ -6,6 +6,7 @@
 #include <iostream>
 #include <json.hpp>
 #include <omp.h>
+#include <sstream>
 
 using namespace nosqlite;
 using json = nlohmann::json;
@@ -199,12 +200,12 @@ int collection::add_document(json &json_object, bool update_header) {
         file.close();
     }
 
-    std::vector<std::string> possible_indices = build_possible_index_names(json_object);
-    for (const auto &index_name : possible_indices) {
-        auto hsh_idx_it = this->indexes.find(index_name);
-        if (hsh_idx_it == this->indexes.end()) continue;
-        hsh_idx_it->second->update_index(original, final, path_to_doc.string());
-    }
+    // std::vector<std::string> possible_indices = build_possible_index_names(json_object);
+    // for (const auto &index_name : possible_indices) {
+    //     auto hsh_idx_it = this->indexes.find(index_name);
+    //     if (hsh_idx_it == this->indexes.end()) continue;
+    //     hsh_idx_it->second->update_index(original, final, path_to_doc.string());
+    // }
 
     // Once everything else is successful increment the number of documents.
     if (update_header) {
@@ -559,11 +560,24 @@ int collection::update_document(unsigned long long id, const json& updated_data,
         if(file.is_open()){
             file << doc_array.dump(4);
             file.close();
-            std::vector<std::string> possible_indices = build_possible_index_names(updated_data);
-            for (const auto &index_name : possible_indices) {
-                auto hsh_idx_it = this->indexes.find(index_name);
-                if (hsh_idx_it == this->indexes.end()) continue;
-                hsh_idx_it->second->update_index(original, final, path_to_doc.string());
+            std::vector<field_type> possible_indices = {};
+            for (auto index : this->indexes) {
+                std::string index_name = index.first;
+                std::stringstream ss(index_name);
+                field_type field = {};
+                std::string f;
+                std::getline(ss, f, '_');
+                while (std::getline(ss, f, '_')) field.push_back(f);
+
+                possible_indices.push_back(field);
+            }
+            for (const field_type &index_name : possible_indices) {
+                if (find_nested_field(final, index_name)) {
+                    auto hsh_idx_it = this->indexes.find(build_index_name(index_name));
+                    if (hsh_idx_it == this->indexes.end()) continue;
+                    hsh_idx_it->second->update_index(original, final, path_to_doc.string());
+                }
+                
             }
             return 0;
         } else {
