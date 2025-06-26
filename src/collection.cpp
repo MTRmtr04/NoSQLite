@@ -199,6 +199,12 @@ int collection::add_document(json &json_object, bool update_header) {
         file.close();
     }
 
+    std::vector<std::string> possible_indices = build_possible_index_names(json_object);
+    for (const auto &index_name : possible_indices) {
+        auto hsh_idx_it = this->indexes.find(index_name);
+        if (hsh_idx_it == this->indexes.end()) continue;
+        hsh_idx_it->second->update_index(original, final, path_to_doc.string());
+    }
 
     // Once everything else is successful increment the number of documents.
     if (update_header) {
