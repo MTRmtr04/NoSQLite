@@ -112,14 +112,12 @@ void hash_index::update_index(json original_value, json updated_value, const std
     std::string hash = hash_json(original_value);
     fs::path path_to_index_file = fs::path(this->path) / hash.substr(0, 2) / hash.substr(2, 2) / "index.json";;
     if (!fs::exists(path_to_index_file)) {
-        //TODO: error handling
         return;
     }
     json index = read_and_parse_json(path_to_index_file);
     size_t n = index[hash.substr(4)].erase(document_path);
 
     if (n == 0) {
-       //TODO: error handling 
        return;
     }
 

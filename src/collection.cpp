@@ -11,7 +11,6 @@
 using namespace nosqlite;
 using json = nlohmann::json;
 
-// TODO: Add index names to the header file so as to make creation at the start more efficient.
 
 collection::collection(const std::string &path) : path(path), number_of_documents(0), parallel_processing(true) {}
 
@@ -151,8 +150,6 @@ int collection::add_document(json &json_object, bool update_header) {
 
     json_object["id"] = this->number_of_documents;
 
-    // TODO: Update indices
-
     // Hash the id.
     std::string idHash = hash_integer(this->number_of_documents);
  
@@ -234,7 +231,6 @@ int collection::add_document(json &json_object, bool update_header) {
             throw_failed_to_open_file(fs::path(this->path) / "header.json");
             throw_failed_to_update_header(this->get_name());
             ret = 1;
-            // TODO: Roll back changes if header update fails. CHECK WITH PROF
         }
     }
     else  this->number_of_documents++;
@@ -811,8 +807,6 @@ int collection::delete_hash_index(const field_type &field) {
     index->delete_index();
     delete index;
     this->indexes.erase(index_name);
-
-    // TODO: Update header.
     
     return 0;
 }
