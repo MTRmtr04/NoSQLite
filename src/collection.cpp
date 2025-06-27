@@ -612,7 +612,8 @@ std::vector<json> nosqlite::collection::update_document(const std::vector<condit
     std::vector<json> updated;
 
     #pragma omp parallel for if(this->parallel_processing)
-    for (const json &doc : matching_docs) {
+    for (int i = 0; i < matching_docs.size(); i++) {
+        json doc = matching_docs[i];
         unsigned long long id = doc["id"];
         json j;
         if (this->update_document(id, updated_data, j) == 0) {
