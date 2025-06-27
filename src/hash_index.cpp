@@ -2,7 +2,6 @@
 #include "auxiliary.hpp"
 #include <fstream>
 #include <iostream>
-#include <unistd.h>
 #include <filesystem>
 #include <json.hpp>
 
@@ -34,7 +33,7 @@ int hash_index::build_index(const field_type &fields) {
 
     // Get all the file JSON paths in the collection except the header.
     std::vector<fs::path> paths;
-    collect_paths(col, paths);
+    collect_paths(col.string(), paths);
 
     for (const fs::path &p : paths) {
         json documents = read_and_parse_json(p);
@@ -112,14 +111,12 @@ void hash_index::update_index(json original_value, json updated_value, const std
     std::string hash = hash_json(original_value);
     fs::path path_to_index_file = fs::path(this->path) / hash.substr(0, 2) / hash.substr(2, 2) / "index.json";;
     if (!fs::exists(path_to_index_file)) {
-        //TODO: error handling
         return;
     }
     json index = read_and_parse_json(path_to_index_file);
     size_t n = index[hash.substr(4)].erase(document_path);
 
     if (n == 0) {
-       //TODO: error handling 
        return;
     }
 
