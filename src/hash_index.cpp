@@ -33,7 +33,7 @@ int hash_index::build_index(const field_type &fields) {
 
     // Get all the file JSON paths in the collection except the header.
     std::vector<fs::path> paths;
-    collect_paths(col, paths);
+    collect_paths(col.string(), paths);
 
     for (const fs::path &p : paths) {
         json documents = read_and_parse_json(p);

@@ -122,7 +122,7 @@ int collection::build_from_existing() {
     if (fs::exists(indexes_path)) {
         for (const fs::path &index_path : fs::directory_iterator(indexes_path)) {
             if (fs::is_directory(index_path)) {
-                this->indexes[get_last_dir(index_path)] = new hash_index(index_path);
+                this->indexes[get_last_dir(index_path.string())] = new hash_index(index_path.string());
             }
         }
     }
@@ -270,7 +270,7 @@ std::vector<json> nosqlite::collection::read_all() const {
     int num_threads = 1;
 
     std::vector<fs::path> file_paths = {};
-    collect_paths(collection_path, file_paths);
+    collect_paths(collection_path.string(), file_paths);
 
     #pragma omp parallel if(this->parallel_processing)
     {
@@ -400,7 +400,7 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
     } else {
 
         std::vector<fs::path> file_paths = {};
-        collect_paths(collection_path, file_paths);
+        collect_paths(collection_path.string(), file_paths);
 
         #pragma omp parallel if(this->parallel_processing)
         {
@@ -693,7 +693,7 @@ int collection::delete_single(const fs::path &file_path, const std::vector<condi
                 if (find_nested_field(doc, index_name)) {
                     auto hsh_idx_it = this->indexes.find(build_index_name(index_name));
                     if (hsh_idx_it == this->indexes.end()) continue;
-                    hsh_idx_it->second->remove_from_index(access_nested_fields(doc, index_name), index_name, file_path);
+                    hsh_idx_it->second->remove_from_index(access_nested_fields(doc, index_name), index_name, file_path.string());
                 }   
             }
 
@@ -758,7 +758,7 @@ int collection::delete_with_conditions(const std::vector<condition_type> &condit
 
     } else {
         std::vector<fs::path> file_paths = {};
-        collect_paths(collection_path, file_paths);
+        collect_paths(collection_path.string(), file_paths);
 
         #pragma omp parallel for if(this->parallel_processing) reduction(+ : docs_removed)
         for (int i = 0; i < file_paths.size(); i++) {
