@@ -1,9 +1,7 @@
 #include "collection.hpp"
 #include "auxiliary.hpp"
-#include <functional>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <json.hpp>
 #include <omp.h>
 #include <sstream>
@@ -11,7 +9,6 @@
 using namespace nosqlite;
 using json = nlohmann::json;
 
-// TODO: Add index names to the header file so as to make creation at the start more efficient.
 
 collection::collection(const std::string &path) : path(path), number_of_documents(0), parallel_processing(true) {}
 
@@ -125,7 +122,7 @@ int collection::build_from_existing() {
     if (fs::exists(indexes_path)) {
         for (const fs::path &index_path : fs::directory_iterator(indexes_path)) {
             if (fs::is_directory(index_path)) {
-                this->indexes[get_last_dir(index_path)] = new hash_index(index_path);
+                this->indexes[get_last_dir(index_path.string())] = new hash_index(index_path.string());
             }
         }
     }
@@ -150,8 +147,6 @@ int collection::add_document(json &json_object, bool update_header) {
     int ret = 0;
 
     json_object["id"] = this->number_of_documents;
-
-    // TODO: Update indices
 
     // Hash the id.
     std::string idHash = hash_integer(this->number_of_documents);
@@ -234,7 +229,6 @@ int collection::add_document(json &json_object, bool update_header) {
             throw_failed_to_open_file(fs::path(this->path) / "header.json");
             throw_failed_to_update_header(this->get_name());
             ret = 1;
-            // TODO: Roll back changes if header update fails. CHECK WITH PROF
         }
     }
     else  this->number_of_documents++;
@@ -276,7 +270,7 @@ std::vector<json> nosqlite::collection::read_all() const {
     int num_threads = 1;
 
     std::vector<fs::path> file_paths = {};
-    collect_paths(collection_path, file_paths);
+    collect_paths(collection_path.string(), file_paths);
 
     #pragma omp parallel if(this->parallel_processing)
     {
@@ -406,7 +400,7 @@ std::vector<json> collection::read_with_conditions(const std::vector<condition_t
     } else {
 
         std::vector<fs::path> file_paths = {};
-        collect_paths(collection_path, file_paths);
+        collect_paths(collection_path.string(), file_paths);
 
         #pragma omp parallel if(this->parallel_processing)
         {
@@ -699,7 +693,7 @@ int collection::delete_single(const fs::path &file_path, const std::vector<condi
                 if (find_nested_field(doc, index_name)) {
                     auto hsh_idx_it = this->indexes.find(build_index_name(index_name));
                     if (hsh_idx_it == this->indexes.end()) continue;
-                    hsh_idx_it->second->remove_from_index(access_nested_fields(doc, index_name), index_name, file_path);
+                    hsh_idx_it->second->remove_from_index(access_nested_fields(doc, index_name), index_name, file_path.string());
                 }   
             }
 
@@ -764,7 +758,7 @@ int collection::delete_with_conditions(const std::vector<condition_type> &condit
 
     } else {
         std::vector<fs::path> file_paths = {};
-        collect_paths(collection_path, file_paths);
+        collect_paths(collection_path.string(), file_paths);
 
         #pragma omp parallel for if(this->parallel_processing) reduction(+ : docs_removed)
         for (int i = 0; i < file_paths.size(); i++) {
@@ -811,8 +805,6 @@ int collection::delete_hash_index(const field_type &field) {
     index->delete_index();
     delete index;
     this->indexes.erase(index_name);
-
-    // TODO: Update header.
     
     return 0;
 }
