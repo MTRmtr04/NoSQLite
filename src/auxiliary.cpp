@@ -1,11 +1,10 @@
 #include <iostream>
 #include <fstream>
-#include <unistd.h>
+#include <sstream>
 #include "auxiliary.hpp"
 
 namespace nosqlite {
     
-    // TODO: Adapt for Windows file path.
     std::string get_last_dir(const std::string &path) {
         std::stringstream ss(path);
         std::string t;
