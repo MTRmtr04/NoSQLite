@@ -23,7 +23,28 @@ By mimicking core NoSQL concepts such as flexible schemas and document-based sto
 ## How to use it
 
 NoSQLite uses an external library for the manipulation of JSON files and objects. Its' documentation can be found in the following Github repository:
-[nlohman JSON Library](https://github.com/nlohmann/json)
+[nlohman JSON Library](https://github.com/nlohmann/json).
+
+**WARNING**: you need `C++17` or greater to use NoSQLite.
+
+### Instalation
+
+Download the most recent release from the repository. Extract the file into a directory of your choosing.
+
+Enter the extracted directory (with `cd`) and run the following commands to compile the showcasing code:
+
+For Linux and MacOs:
+```
+g++ main.cpp -o nosqlite -I include/ lib/libnosqlite.a -fopenmp
+```
+
+For Windows:
+```
+cl main.cpp /EHsc /I include /std:c++17 /openmp /link /OUT:nosqlite.exe /LIBPATH:lib libnosqlite.lib
+```
+
+Read the comments inside the `main.cpp` file for help on how to run the program.
+
 
 ### Starter Knowledge
 
