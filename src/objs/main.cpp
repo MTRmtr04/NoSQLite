@@ -2,7 +2,6 @@
 #include <chrono>
 #include <iostream>
 #include "nosqlite.hpp"
-#include <unistd.h>
 
 using namespace std;
 using namespace std::chrono;

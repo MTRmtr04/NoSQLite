@@ -2,7 +2,6 @@
 #include "auxiliary.hpp"
 #include <fstream>
 #include <iostream>
-#include <unistd.h>
 #include <filesystem>
 #include <json.hpp>
 

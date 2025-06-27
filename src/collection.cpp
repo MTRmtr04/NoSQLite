@@ -1,9 +1,7 @@
 #include "collection.hpp"
 #include "auxiliary.hpp"
-#include <functional>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <json.hpp>
 #include <omp.h>
 #include <sstream>

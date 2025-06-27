@@ -3,7 +3,6 @@
 #include "collection.hpp"
 #include <string>
 #include <vector>
-#include <iostream>
 #include <json.hpp>
 #include "nosqlite.hpp"
 
